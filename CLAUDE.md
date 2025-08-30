@@ -85,6 +85,7 @@ The project uses two linting tools that complement each other:
 - When writing new code, run existing tests and create new tests afterward
 - When refactoring code, always run existing tests to verify functionality
 - Maintain minimum test coverage of 85%
+- **Test Failure Handling**: If a test cannot be fixed after 3 attempts, record it in TODO.md with details and move to the next test
 
 ## API Endpoints
 

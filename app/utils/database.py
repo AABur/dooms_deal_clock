@@ -5,11 +5,20 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 
+# Load configuration
 load_dotenv()
 
+# Use in-memory SQLite for testing environment to avoid file creation issues
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./clock_data.db")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
+# Force in-memory database during tests
+import sys
+if "pytest" in sys.modules or any("test" in arg for arg in sys.argv):
+    DATABASE_URL = "sqlite:///:memory:"
+
+# Create engine with appropriate settings
+connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
@@ -38,8 +47,12 @@ class ParsedMessage(Base):
     error_message = Column(Text, nullable=True)
     processed_at = Column(DateTime, default=datetime.utcnow)
 
-# Создание таблиц
+# Create tables on module import
 Base.metadata.create_all(bind=engine)
+
+def create_tables():
+    """Create database tables (for explicit calls)."""
+    Base.metadata.create_all(bind=engine)
 
 def get_db():
     """Dependency для получения сессии БД"""
