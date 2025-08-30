@@ -1,0 +1,17 @@
+{
+  "name": "dooms-deal-clock-frontend",
+  "version": "0.1.0",
+  "description": "Frontend for Dooms Deal Clock web application",
+  "private": true,
+  "scripts": {
+    "lint": "eslint web/script.js",
+    "lint:fix": "eslint web/script.js --fix",
+    "format": "prettier --write web/",
+    "format:check": "prettier --check web/",
+    "check": "npm run format:check && npm run lint"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "prettier": "^3.0.0"
+  }
+}

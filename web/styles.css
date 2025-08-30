@@ -1,0 +1,254 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', 'Helvetica', sans-serif;
+    background: #000;
+    color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+    padding: 20px;
+}
+
+.clock-wrapper {
+    background: linear-gradient(135deg, #000 0%, #1a1a1a 50%, #000 100%);
+    position: relative;
+    overflow: hidden;
+    padding: 30px;
+    border-radius: 0;
+}
+
+/* Дымчатые эффекты */
+.clock-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 70% 30%, rgba(80, 80, 80, 0.4) 0%, transparent 50%),
+        radial-gradient(circle at 30% 70%, rgba(100, 100, 100, 0.3) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+.clock-wrapper > * {
+    position: relative;
+    z-index: 2;
+}
+
+.channel-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 30px;
+    font-size: 1.2rem;
+}
+
+.telegram-icon {
+    color: white;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.telegram-icon svg {
+    width: 20px;
+    height: 20px;
+    fill: white;
+}
+
+.channel-name {
+    color: white;
+    font-weight: normal;
+}
+
+.clock-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    width: 100%;
+}
+
+.time-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.minutes, .seconds {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 10px;
+}
+
+.time-number {
+    font-size: 12rem;
+    font-weight: 900;
+    color: #E85D75;
+    line-height: 0.7;
+    margin-right: 15px;
+    font-family: Arial, sans-serif;
+}
+
+.time-label {
+    font-size: 2.5rem;
+    color: white;
+    font-weight: normal;
+}
+
+.analog-clock {
+    flex: 0 0 300px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.clock-circle {
+    width: 280px;
+    height: 280px;
+    border: 8px solid #E85D75;
+    border-radius: 50%;
+    background: #000;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hour-marks {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.mark {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+}
+
+.mark-12 {
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.mark-3 {
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.mark-6 {
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.mark-9 {
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+
+.clock-hands {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.minute-hand {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 80px;
+    background: #888;
+    transform-origin: bottom center;
+    transform: translate(-50%, -100%) rotate(270deg);
+    border-radius: 0;
+}
+
+.hour-hand {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 60px;
+    background: white;
+    transform-origin: bottom center;
+    transform: translate(-50%, -100%) rotate(345deg);
+    border-radius: 0;
+}
+
+.date-info {
+    text-align: left;
+    font-size: 1.4rem;
+    color: white;
+    margin-bottom: 20px;
+    font-weight: normal;
+}
+
+.current-time {
+    text-align: left;
+    font-size: 1.2rem;
+    color: #ccc;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .clock-main {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .time-left {
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .time-number {
+        font-size: 6rem;
+    }
+    
+    .time-label {
+        font-size: 2rem;
+    }
+    
+    .analog-clock {
+        flex: none;
+    }
+    
+    .clock-circle {
+        width: 200px;
+        height: 200px;
+    }
+    
+    .minute-hand {
+        height: 56px;
+        width: 5px;
+    }
+    
+    .hour-hand {
+        height: 45px;
+        width: 6px;
+    }
+    
+}

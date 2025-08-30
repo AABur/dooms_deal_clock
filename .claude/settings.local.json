@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:thebulletin.org)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
+      "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
+      "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
+      "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
+      "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
+      "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
+      "Bash(tree:*)",
+      "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
+      "Bash(uv pip install:*)",
+      "Bash(uv venv:*)",
+      "Bash(timeout 10 uv run:*)",
+      "Bash(timeout 5 uv run:*)",
+      "Bash(curl:*)",
+      "Bash(make:*)",
+      "Bash(docker compose:*)",
+      "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
+      "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
+      "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
+      "WebFetch(domain:t.me)",
+      "Bash(touch:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
