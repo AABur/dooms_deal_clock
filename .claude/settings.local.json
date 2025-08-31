@@ -22,7 +22,17 @@
       "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
       "Read(/Users/aabur/Documents/GitHub/AABur/VideoGrabberBot/**)",
       "WebFetch(domain:t.me)",
-      "Bash(touch:*)"
+      "Bash(touch:*)",
+      "Bash(lsof:*)",
+      "Bash(sqlite3:*)",
+      "Bash(kill:*)",
+      "Bash(open:*)",
+      "Bash(git add:*)",
+      "Read(/Users/aabur/.claude/**)",
+      "Read(/Users/aabur/.claude/**)",
+      "Bash(uv run ruff:*)",
+      "Bash(uv run flake8:*)",
+      "Bash(uv run:*)"
     ],
     "deny": [],
     "ask": []

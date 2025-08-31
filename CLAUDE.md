@@ -178,8 +178,13 @@ manualUpdate("23:55:00", "desc") // manual update
    - Do not include "Test plan" sections in PR descriptions
 
 3. **Code Generation Rules**:
+   - Do what has been asked; nothing more, nothing less
    - Never start working with code until explicit approval from the developer
    - Do not write code directly in chat without a specific request
+   - DO NOT ADD ***ANY*** COMMENTS unless asked
+   - ALWAYS prefer editing existing files to creating new ones
+   - NEVER create files unless they're absolutely necessary
+   - NEVER proactively create documentation files (*.md) or README files
    - Do not add comments that describe changes, progress, or historical modifications
    - Comments should only describe the current state and purpose of the code, not its history
    - If unable to fix a linting error after 3 attempts, stop and discuss with developer

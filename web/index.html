@@ -4,19 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Часы судного договорняка</title>
+    <!-- Google Fonts preload for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Main application container -->
     <div class="container">
+        <!-- Clock display component wrapper -->
         <div class="clock-wrapper">
+            <!-- Layout for image and text content -->
             <div class="content-layout">
+                <!-- Telegram image display section -->
                 <div class="telegram-image">
                     <img id="clockImage" src="" alt="Часы судного договорняка" style="display: none; max-width: 100%; height: auto;" />
                     <div id="noImageMessage" class="no-image-text">Загружается изображение...</div>
                 </div>
+                <!-- Message content display section -->
                 <div class="message-text">
                     <div id="messageContent" class="message-content">Загружается сообщение...</div>
                 </div>
@@ -24,6 +30,7 @@
         </div>
     </div>
     
+    <!-- Main application script -->
     <script src="script.js"></script>
 </body>
 </html>

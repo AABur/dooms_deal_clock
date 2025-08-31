@@ -10,13 +10,9 @@ from app.main import app
 def main() -> None:
     """Run the FastAPI application."""
     config.validate()
-    
+
     uvicorn.run(
-        app,
-        host=config.API_HOST,
-        port=config.API_PORT,
-        reload=config.DEBUG,
-        log_level=config.LOG_LEVEL.lower()
+        app, host=config.API_HOST, port=config.API_PORT, reload=config.DEBUG, log_level=config.LOG_LEVEL.lower()
     )
 
 

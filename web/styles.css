@@ -1,9 +1,11 @@
+/* CSS Reset */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* Base body styles */
 body {
     font-family: 'Arial', 'Helvetica', sans-serif;
     background: #000;
@@ -14,12 +16,14 @@ body {
     justify-content: center;
 }
 
+/* Main container layout */
 .container {
     width: 100%;
     max-width: 1170px;
     padding: 20px;
 }
 
+/* Main clock wrapper with gradient background */
 .clock-wrapper {
     background: linear-gradient(135deg, #000 0%, #1a1a1a 50%, #000 100%);
     position: relative;
@@ -28,7 +32,7 @@ body {
     border-radius: 0;
 }
 
-/* Дымчатые эффекты */
+/* Smoky background effects overlay */
 .clock-wrapper::before {
     content: '';
     position: absolute;
@@ -43,6 +47,7 @@ body {
     z-index: 1;
 }
 
+/* Ensure content stays above background effects */
 .clock-wrapper > * {
     position: relative;
     z-index: 2;
@@ -62,13 +67,28 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 390px;
+    min-height: 520px;
     padding-right: 26px;
 }
 
 /* Message text (right side) */
 .message-text {
-    flex: 1;
+    flex: 0 0 520px;
+    height: 520px;
+    overflow: hidden;
+}
+
+.message-content {
+    animation: scrollUp 30s linear infinite;
+}
+
+@keyframes scrollUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(-100%);
+    }
 }
 
 .message-content {
@@ -78,7 +98,7 @@ body {
     word-wrap: break-word;
 }
 
-/* Форматирование текста сообщения */
+/* Message content text formatting styles */
 .message-content strong {
     font-weight: bold;
     color: #ffcc00;
@@ -98,7 +118,7 @@ body {
     color: #66b3ff;
 }
 
-/* Заголовок времени */
+/* Time display header styles */
 .time-header {
     font-size: 24px;
     margin-bottom: 32px;
@@ -111,7 +131,7 @@ body {
     color: rgb(235, 62, 98);
 }
 
-/* Эмодзи-индикаторы */
+/* Emoji indicator styles with color filters */
 .emoji-indicator {
     display: inline-block;
     margin-right: 5px;
@@ -129,6 +149,7 @@ body {
     filter: brightness(1.1);
 }
 
+/* Clock image display styles */
 #clockImage {
     max-width: 100%;
     max-height: 650px;
@@ -136,6 +157,7 @@ body {
     box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
 }
 
+/* Placeholder text when no image is available */
 .no-image-text {
     color: #888;
     font-size: 18px;
@@ -143,7 +165,7 @@ body {
     padding: 40px;
 }
 
-/* Responsive design */
+/* Responsive design for mobile devices */
 @media (max-width: 768px) {
     .content-layout {
         flex-direction: column;
@@ -156,6 +178,7 @@ body {
     }
 }
 
+/* Channel header with Telegram icon */
 .channel-header {
     display: flex;
     align-items: center;
@@ -321,6 +344,7 @@ body {
     font-weight: bold;
 }
 
+/* Mobile responsive styles for clock components */
 @media (max-width: 768px) {
     .clock-main {
         flex-direction: column;

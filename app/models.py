@@ -1,8 +1,5 @@
 """Database models for the Dooms Deal Clock application."""
 
-from datetime import datetime
-from typing import Optional
-
 from sqlalchemy import Column, DateTime, Integer, String, Text, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -15,9 +12,9 @@ Base = declarative_base()
 
 class ClockUpdate(Base):
     """Model for storing clock updates from Telegram channel."""
-    
+
     __tablename__ = "clock_updates"
-    
+
     id = Column(Integer, primary_key=True, index=True)
     message_id = Column(Integer, unique=True, index=True, nullable=False)
     content = Column(Text, nullable=False)
@@ -25,7 +22,7 @@ class ClockUpdate(Base):
     image_data = Column(Text, nullable=True)  # Base64 encoded image data
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-    
+
     def __repr__(self) -> str:
         return f"<ClockUpdate(id={self.id}, time_value='{self.time_value}')>"
 

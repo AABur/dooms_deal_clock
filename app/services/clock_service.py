@@ -3,81 +3,104 @@
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy.orm import Session
 from loguru import logger
+from sqlalchemy.orm import Session
 
-from app.models import ClockUpdate, get_db
+from app.models import ClockUpdate
 from app.telegram_api.client import TelegramService
 
 
 class ClockService:
     """Service for handling clock updates."""
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
         """Initialize the clock service."""
         self.telegram_service = TelegramService()
-    
+
     async def fetch_and_store_updates(self, db: Session) -> int:
-        """Fetch latest messages from Telegram and store clock updates."""
+        """Fetch latest messages from Telegram and store clock updates.
+
+        Args:
+            db: Database session
+
+        Returns:
+            Number of new updates stored
+
+        Raises:
+            Exception: If fetching or storing updates fails
+        """
         await self.telegram_service.connect()
-        
+
         try:
             messages = await self.telegram_service.get_latest_messages(limit=5)
             updates_count = 0
-            
+
             for message in messages:
                 if not message.text:
                     continue
-                
-                # Check if message already exists
-                existing = db.query(ClockUpdate).filter(
-                    ClockUpdate.message_id == message.id
-                ).first()
-                
+
+                existing = db.query(ClockUpdate).filter(ClockUpdate.message_id == message.id).first()
+
                 if existing:
                     continue
-                
-                # Extract time from message
+
                 time_value = self.telegram_service.extract_time_from_message(message.text)
-                
-                # Get image data if message has photo
+
                 image_data = await self.telegram_service.get_message_image_data(message)
-                
-                # Store the update
                 clock_update = ClockUpdate(
                     message_id=message.id,
                     content=message.text,
                     time_value=time_value,
                     image_data=image_data,
-                    created_at=message.date or datetime.utcnow()
+                    created_at=message.date or datetime.utcnow(),
                 )
-                
+
                 db.add(clock_update)
                 updates_count += 1
-                
+
                 logger.info(f"Stored clock update from message {message.id}: {time_value}")
-            
+
             db.commit()
             logger.info(f"Successfully stored {updates_count} new clock updates")
             return updates_count
-            
+
         except Exception as e:
             db.rollback()
             logger.error(f"Error fetching and storing updates: {e}")
             return 0
         finally:
             await self.telegram_service.disconnect()
-    
+
     def get_latest_update(self, db: Session) -> Optional[ClockUpdate]:
-        """Get the most recent clock update."""
+        """Get the most recent clock update.
+
+        Args:
+            db: Database session
+
+        Returns:
+            Latest clock update or None if no updates exist
+        """
         return db.query(ClockUpdate).order_by(ClockUpdate.created_at.desc()).first()
-    
+
     def get_recent_updates(self, db: Session, limit: int = 10) -> List[ClockUpdate]:
-        """Get recent clock updates."""
-        return db.query(ClockUpdate).order_by(
-            ClockUpdate.created_at.desc()
-        ).limit(limit).all()
-    
+        """Get recent clock updates ordered by creation date.
+
+        Args:
+            db: Database session
+            limit: Maximum number of updates to retrieve
+
+        Returns:
+            List of recent clock updates
+        """
+        return db.query(ClockUpdate).order_by(ClockUpdate.created_at.desc()).limit(limit).all()
+
     def get_updates_count(self, db: Session) -> int:
-        """Get total count of clock updates."""
+        """Get total count of clock updates in database.
+
+        Args:
+            db: Database session
+
+        Returns:
+            Total number of clock updates
+        """
         return db.query(ClockUpdate).count()
