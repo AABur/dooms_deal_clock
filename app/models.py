@@ -22,6 +22,7 @@ class ClockUpdate(Base):
     message_id = Column(Integer, unique=True, index=True, nullable=False)
     content = Column(Text, nullable=False)
     time_value = Column(String(50), nullable=True)
+    image_data = Column(Text, nullable=True)  # Base64 encoded image data
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     

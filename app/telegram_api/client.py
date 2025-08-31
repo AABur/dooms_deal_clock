@@ -2,10 +2,12 @@
 
 import asyncio
 import re
+import io
+import base64
 from typing import List, Optional
 
 from telethon import TelegramClient
-from telethon.tl.types import Message
+from telethon.tl.types import Message, MessageMediaPhoto
 from loguru import logger
 
 from app.config import config
@@ -75,15 +77,39 @@ class TelegramService:
             return None
     
     def extract_time_from_message(self, message_text: str) -> Optional[str]:
-        """Extract time value from message text (e.g., '23:58' or '11:45')."""
+        """Extract time value from message text (e.g., '23:58:05' or '23:58')."""
         time_patterns = [
-            r'(\d{1,2}:\d{2})',  # Match HH:MM or H:MM format
-            r'(\d{1,2}\.\d{2})',  # Match HH.MM format
+            r'(\d{1,2}:\d{2}:\d{2})',  # Match HH:MM:SS format first
+            r'(\d{1,2}:\d{2})',        # Match HH:MM or H:MM format
+            r'(\d{1,2}\.\d{2})',       # Match HH.MM format
         ]
         
         for pattern in time_patterns:
             match = re.search(pattern, message_text)
             if match:
+                logger.info(f"Extracted time '{match.group(1)}' from message")
                 return match.group(1)
         
+        logger.warning(f"No time pattern found in message: {message_text[:100]}...")
         return None
+    
+    async def get_message_image_data(self, message: Message) -> Optional[str]:
+        """Get image data from message as base64 string."""
+        if not message.media or not isinstance(message.media, MessageMediaPhoto):
+            return None
+        
+        try:
+            client = self._get_client()
+            # Download photo to bytes buffer
+            photo_bytes = io.BytesIO()
+            await client.download_media(message, file=photo_bytes)
+            photo_bytes.seek(0)
+            
+            # Convert to base64
+            image_data = base64.b64encode(photo_bytes.read()).decode('utf-8')
+            logger.info(f"Downloaded image data for message {message.id}")
+            return image_data
+            
+        except Exception as e:
+            logger.error(f"Error downloading image from message {message.id}: {e}")
+            return None

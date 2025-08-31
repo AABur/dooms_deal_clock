@@ -7,11 +7,9 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 const appState = {
     clockData: {
         time: "23:56:55",
-        minutes: 2,
-        seconds: 40,
-        date: "20 августа 2025 года, 1274 день",
-        currentTime: "23:57:20 (-5) | 160 секунд (+5)",
-        lastUpdate: new Date().toISOString()
+        content: "",
+        imageData: null,
+        created_at: new Date().toISOString()
     },
     isConnected: false,
     lastFetchTime: null,
@@ -19,83 +17,85 @@ const appState = {
     maxRetries: 3
 };
 
-function parseTimeString(timeStr) {
-    // Парсим время в формате "23:56" или "23:56:55" 
-    const parts = timeStr.split(':');
-    if (parts.length >= 2) {
-        const hours = parseInt(parts[0]);
-        const minutes = parseInt(parts[1]);
-        const seconds = parts.length > 2 ? parseInt(parts[2]) : 0;
-        
-        // Вычисляем ОСТАВШЕЕСЯ время до полуночи (24:00)
-        // Если сейчас 23:56:00, то до полуночи осталось 4 минуты 0 секунд
-        let finalMinutes, finalSeconds;
-        
-        if (seconds === 0) {
-            finalMinutes = 60 - minutes;
-            finalSeconds = 0;
-        } else {
-            finalMinutes = 60 - minutes - 1;
-            finalSeconds = 60 - seconds;
-        }
-        
-        // Если часы не 23, то считаем полное время до полуночи
-        if (hours < 23) {
-            // Всего секунд до полуночи (24:00:00)
-            const totalSecondsLeft = (24 - hours) * 3600 - (minutes * 60) - seconds;
-            finalMinutes = Math.floor(totalSecondsLeft / 60);
-            finalSeconds = totalSecondsLeft % 60;
-        }
-        
-        return {
-            displayMinutes: finalMinutes,
-            displaySeconds: finalSeconds,
-            hourAngle: (hours % 12) * 30 + (minutes * 0.5), // 30 градусов за час + смещение от минут
-            minuteAngle: minutes * 6 // 6 градусов за минуту (360/60)
-        };
-    }
-    return { displayMinutes: 4, displaySeconds: 0, hourAngle: 345, minuteAngle: 336 };
+function formatTelegramMessage(content) {
+    console.log('Formatting Telegram message:', content);
+    
+    if (!content) return '';
+    
+    let formatted = content;
+    
+    // Убираем лишние звездочки в начале сообщения (например, **23:56:05)
+    formatted = formatted.replace(/^\*\*(\d{2}:\d{2}:\d{2})/m, '$1');
+    
+    // Выделяем время в начале сообщения как жирное и убираем лишние переносы
+    formatted = formatted.replace(/^(\d{2}:\d{2}:\d{2}\s+\([^)]+\)\s*\|\s*\d+\s+секунд[ау]?\s+\([^)]+\))\n\n/m, 
+        '<div class="time-header"><strong>$1</strong></div>');
+    
+    // Преобразуем жирный текст **текст** в <strong>текст</strong>
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Преобразуем курсив *текст* в <em>текст</em> (но не затрагиваем уже обработанные **)
+    formatted = formatted.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
+    
+    // Преобразуем ссылки [текст](url) в <a href="url">текст</a>
+    formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    
+    // Преобразуем эмодзи-индикаторы в цветные блоки
+    formatted = formatted.replace(/🟡/g, '<span class="emoji-indicator yellow">🟡</span>');
+    formatted = formatted.replace(/🟢/g, '<span class="emoji-indicator green">🟢</span>');
+    formatted = formatted.replace(/🔴/g, '<span class="emoji-indicator red">🔴</span>');
+    
+    // Добавляем разрывы строк
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    // Убираем лишние звездочки в конце перед "Другие новости"
+    formatted = formatted.replace(/\*\*<br>Другие новости/g, '<br>Другие новости');
+    
+    console.log('Formatted message:', formatted);
+    return formatted;
 }
 
 function updateClock() {
-    console.log('Updating clock with time:', appState.clockData.time);
-    const parsed = parseTimeString(appState.clockData.time);
-    console.log('Parsed time:', parsed);
+    console.log('Updating display with data:', {
+        hasImage: !!appState.clockData.imageData,
+        hasContent: !!appState.clockData.content
+    });
     
-    // Обновляем большие цифры
-    const minutesEl = document.getElementById('minutes');
-    const secondsEl = document.getElementById('seconds');
-    
-    if (minutesEl) {
-        minutesEl.textContent = parsed.displayMinutes;
-        console.log('Set minutes to:', parsed.displayMinutes);
-    }
-    if (secondsEl) {
-        secondsEl.textContent = parsed.displaySeconds.toString().padStart(2, '0');
-        console.log('Set seconds to:', parsed.displaySeconds);
-    }
-    
-    // Обновляем стрелки часов
-    const minuteHand = document.getElementById('minuteHand');
-    const hourHand = document.getElementById('hourHand');
-    
-    if (minuteHand && hourHand) {
-        minuteHand.style.transform = `translate(-50%, -100%) rotate(${parsed.minuteAngle}deg)`;
-        hourHand.style.transform = `translate(-50%, -100%) rotate(${parsed.hourAngle}deg)`;
+    // Обновляем текст сообщения с форматированием
+    const messageContent = document.getElementById('messageContent');
+    if (messageContent) {
+        if (appState.clockData.content) {
+            messageContent.innerHTML = formatTelegramMessage(appState.clockData.content);
+        } else {
+            messageContent.textContent = appState.isConnected ? 
+                'Сообщение не найдено' : 
+                'Нет подключения к серверу';
+        }
     }
     
-    // Обновляем дату и время
-    const dateEl = document.getElementById('dateText');
-    const currentTimeEl = document.getElementById('currentTime');
+    // Обновляем изображение
+    const clockImage = document.getElementById('clockImage');
+    const noImageMessage = document.getElementById('noImageMessage');
     
-    if (dateEl) dateEl.textContent = appState.clockData.date;
-    if (currentTimeEl) currentTimeEl.textContent = appState.clockData.currentTime;
+    if (appState.clockData.imageData) {
+        // Показываем изображение из Telegram канала
+        clockImage.src = `data:image/jpeg;base64,${appState.clockData.imageData}`;
+        clockImage.style.display = 'block';
+        noImageMessage.style.display = 'none';
+        console.log('Displayed image from Telegram');
+    } else {
+        // Скрываем изображение и показываем сообщение
+        clockImage.style.display = 'none';
+        noImageMessage.style.display = 'block';
+        noImageMessage.textContent = appState.isConnected ? 
+            'Изображение не найдено в сообщении' : 
+            'Нет подключения к серверу';
+    }
     
-    // Индикатор подключения
-    if (minutesEl && secondsEl) {
-        const opacity = appState.isConnected ? '1' : '0.7';
-        minutesEl.style.opacity = opacity;
-        secondsEl.style.opacity = opacity;
+    // Индикатор подключения через прозрачность контейнера
+    const contentLayout = document.querySelector('.content-layout');
+    if (contentLayout) {
+        contentLayout.style.opacity = appState.isConnected ? '1' : '0.7';
     }
 }
 
@@ -118,38 +118,13 @@ async function fetchClockData() {
         
         const data = await response.json();
         
-        // Обновляем состояние приложения
-        let extractedTime = data.time || "23:56";
+        // Обновляем состояние приложения новыми данными
+        appState.clockData.time = data.time || "23:56";
+        appState.clockData.content = data.content || "";
+        appState.clockData.imageData = data.image_data;
+        appState.clockData.created_at = data.created_at;
         
-        // Парсим контент для извлечения ПОЛНОГО времени с секундами
-        if (data.content) {
-            console.log('Parsing content:', data.content);
-            
-            // Ищем ТОЧНОЕ время в формате "23:56:00" в начале сообщения
-            const fullTimeMatch = data.content.match(/\*?\*?(\d{1,2}):(\d{2}):(\d{2})/);
-            if (fullTimeMatch) {
-                const hours = fullTimeMatch[1].padStart(2, '0');
-                const minutes = fullTimeMatch[2];
-                const seconds = fullTimeMatch[3];
-                extractedTime = `${hours}:${minutes}:${seconds}`;
-                console.log('Extracted FULL time from content:', extractedTime);
-            }
-            
-            // Ищем дату в формате "20 августа 2025 года, 1274 день"
-            const dateMatch = data.content.match(/(\d{1,2}\s+\w+\s+\d{4}\s+года,\s+\d+\s+день)/);
-            if (dateMatch) {
-                appState.clockData.date = dateMatch[1];
-            }
-            
-            // Ищем время с изменениями в формате "23:57:20 (-5) | 160 секунд (+5)"
-            const timeMatch = data.content.match(/(\d{2}:\d{2}:\d{2}\s+\([^)]+\)\s+\|\s+\d+\s+секунд\s+\([^)]+\))/);
-            if (timeMatch) {
-                appState.clockData.currentTime = timeMatch[1];
-            }
-        }
-        
-        appState.clockData.time = extractedTime;
-        appState.clockData.lastUpdate = data.created_at;
+        console.log('Updated app state:', appState.clockData);
         
         appState.isConnected = true;
         appState.lastFetchTime = new Date();

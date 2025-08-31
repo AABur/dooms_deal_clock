@@ -11,10 +11,11 @@ from sqlalchemy.orm import Session
 from loguru import logger
 
 from app.config import config
-from app.models import create_tables, get_db
+from app.models import create_tables, get_db, ClockUpdate
 from app.services.clock_service import ClockService
 from app.services.background_tasks import background_service
 from app.utils.logging import setup_logging
+from app.migrations import run_migrations
 
 setup_logging()
 
@@ -30,6 +31,9 @@ async def lifespan(app: FastAPI):
     # Create database tables
     create_tables()
     logger.info("Database tables created")
+    
+    # Run migrations
+    run_migrations()
     
     # Note: Background tasks not started automatically
     # Use POST /api/clock/fetch to manually fetch updates
@@ -86,6 +90,7 @@ async def get_latest_clock(db: Session = Depends(get_db)) -> Dict[str, Any]:
         "id": latest_update.id,
         "time": latest_update.time_value,
         "content": latest_update.content,
+        "image_data": latest_update.image_data,
         "created_at": latest_update.created_at.isoformat(),
         "message_id": latest_update.message_id
     }
@@ -106,6 +111,7 @@ async def get_clock_history(
                 "id": update.id,
                 "time": update.time_value,
                 "content": update.content,
+                "image_data": update.image_data,
                 "created_at": update.created_at.isoformat(),
                 "message_id": update.message_id
             }
@@ -127,4 +133,27 @@ async def fetch_updates(db: Session = Depends(get_db)) -> Dict[str, Any]:
         }
     except Exception as e:
         logger.error(f"Error fetching updates: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/clock/reload/{message_id}")
+async def reload_message(message_id: int, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Force reload specific message with image data."""
+    try:
+        # Delete existing message
+        existing = db.query(ClockUpdate).filter(ClockUpdate.message_id == message_id).first()
+        if existing:
+            db.delete(existing)
+            db.commit()
+            logger.info(f"Deleted existing message {message_id}")
+        
+        # Fetch fresh data
+        updates_count = await clock_service.fetch_and_store_updates(db)
+        return {
+            "message": f"Successfully reloaded message {message_id}, fetched {updates_count} updates",
+            "message_id": message_id,
+            "updates_count": updates_count
+        }
+    except Exception as e:
+        logger.error(f"Error reloading message {message_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))

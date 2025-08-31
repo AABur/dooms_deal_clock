@@ -40,11 +40,15 @@ class ClockService:
                 # Extract time from message
                 time_value = self.telegram_service.extract_time_from_message(message.text)
                 
+                # Get image data if message has photo
+                image_data = await self.telegram_service.get_message_image_data(message)
+                
                 # Store the update
                 clock_update = ClockUpdate(
                     message_id=message.id,
                     content=message.text,
                     time_value=time_value,
+                    image_data=image_data,
                     created_at=message.date or datetime.utcnow()
                 )
                 

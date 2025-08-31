@@ -4,54 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Часы судного договорняка</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <div class="clock-wrapper">
-            <div class="channel-header">
-                <div class="telegram-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 8.16l-1.61 7.548c-.12.547-.438.679-.886.423l-2.432-1.79-1.174 1.134c-.13.13-.24.24-.492.24l.174-2.475 4.542-4.105c.196-.175-.043-.27-.306-.096L9.516 13.65l-2.432-.759c-.528-.165-.538-.528.114-.78L19.846 7.16c.438-.175.826.105.68.78l.042.22z"/>
-                    </svg>
+            <div class="content-layout">
+                <div class="telegram-image">
+                    <img id="clockImage" src="" alt="Часы судного договорняка" style="display: none; max-width: 100%; height: auto;" />
+                    <div id="noImageMessage" class="no-image-text">Загружается изображение...</div>
                 </div>
-                <span class="channel-name">dooms_deal_clock</span>
-            </div>
-            
-            <div class="clock-main">
-                <div class="time-left">
-                    <div class="minutes">
-                        <span class="time-number" id="minutes">2</span>
-                        <span class="time-label">МИН</span>
-                    </div>
-                    <div class="seconds">
-                        <span class="time-number" id="seconds">40</span>
-                        <span class="time-label">сек</span>
-                    </div>
+                <div class="message-text">
+                    <div id="messageContent" class="message-content">Загружается сообщение...</div>
                 </div>
-                
-                <div class="analog-clock">
-                    <div class="clock-circle">
-                        <div class="hour-marks">
-                            <div class="mark mark-12"></div>
-                            <div class="mark mark-3"></div>
-                            <div class="mark mark-6"></div>
-                            <div class="mark mark-9"></div>
-                        </div>
-                        <div class="clock-hands">
-                            <div class="minute-hand" id="minuteHand"></div>
-                            <div class="hour-hand" id="hourHand"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="date-info">
-                <span id="dateText">20 августа 2025 года, 1274 день</span>
-            </div>
-            
-            <div class="current-time">
-                <span id="currentTime">23:57:20 (-5) | 160 секунд (+5)</span>
             </div>
         </div>
     </div>

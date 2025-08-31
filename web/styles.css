@@ -16,7 +16,7 @@ body {
 
 .container {
     width: 100%;
-    max-width: 900px;
+    max-width: 1170px;
     padding: 20px;
 }
 
@@ -46,6 +46,114 @@ body {
 .clock-wrapper > * {
     position: relative;
     z-index: 2;
+}
+
+/* Content layout */
+.content-layout {
+    display: flex;
+    gap: 39px;
+    align-items: flex-start;
+    min-height: 520px;
+}
+
+/* Telegram image display (left side) */
+.telegram-image {
+    flex: 0 0 520px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 390px;
+    padding-right: 26px;
+}
+
+/* Message text (right side) */
+.message-text {
+    flex: 1;
+}
+
+.message-content {
+    color: #ffffff;
+    font-size: 16px;
+    line-height: 1.6;
+    word-wrap: break-word;
+}
+
+/* Форматирование текста сообщения */
+.message-content strong {
+    font-weight: bold;
+    color: #ffcc00;
+}
+
+.message-content em {
+    font-style: italic;
+    color: #cccccc;
+}
+
+.message-content a {
+    color: #4da6ff;
+    text-decoration: underline;
+}
+
+.message-content a:hover {
+    color: #66b3ff;
+}
+
+/* Заголовок времени */
+.time-header {
+    font-size: 24px;
+    margin-bottom: 32px;
+    white-space: nowrap;
+}
+
+.time-header strong {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: bold;
+    color: rgb(235, 62, 98);
+}
+
+/* Эмодзи-индикаторы */
+.emoji-indicator {
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.emoji-indicator.yellow {
+    filter: brightness(1.2);
+}
+
+.emoji-indicator.green {
+    filter: brightness(1.1);
+}
+
+.emoji-indicator.red {
+    filter: brightness(1.1);
+}
+
+#clockImage {
+    max-width: 100%;
+    max-height: 650px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+}
+
+.no-image-text {
+    color: #888;
+    font-size: 18px;
+    text-align: center;
+    padding: 40px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .content-layout {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .telegram-image {
+        flex: none;
+        padding-right: 0;
+    }
 }
 
 .channel-header {
