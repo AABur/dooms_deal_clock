@@ -21,15 +21,23 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 @pytest.fixture(scope="session")
-def test_db_engine():
-    """Create a test database engine using in-memory SQLite."""
+def test_db_engine(tmp_path_factory):
+    """Create a test database engine using a temporary SQLite file.
+
+    Using a file-based SQLite allows multiple connections to see the same data,
+    which is needed when FastAPI creates separate sessions per request.
+    """
+    db_dir = tmp_path_factory.mktemp("db")
+    db_path = db_dir / "test_db.sqlite"
     engine = create_engine(
-        "sqlite:///:memory:",
+        f"sqlite:///{db_path}",
         echo=False,
         connect_args={"check_same_thread": False},
     )
-    yield engine
-    engine.dispose()
+    try:
+        yield engine
+    finally:
+        engine.dispose()
 
 
 @pytest.fixture
@@ -74,22 +82,30 @@ def test_client(test_db_session, mocker):
         clear=False,
     )
 
-    # Patch migrations to use the test engine (prevents touching local file DB)
+    # Patch app models and migrations to use the test engine/session
     try:
+        from sqlalchemy.orm import sessionmaker as _sessionmaker
+
+        import app.models as models_module
+
+        models_module.engine = test_db_session.bind
+        models_module.SessionLocal = _sessionmaker(autocommit=False, autoflush=False, bind=test_db_session.bind)
+
         import app.migrations as migrations_module
         migrations_module.engine = test_db_session.bind
     except Exception:
         pass
 
     # Now import after environment is mocked
+    import app.main as app_main
     from app.main import app
-    from app.models import get_db
+    import app.models as models_module
 
-    # Override the get_db dependency to use test database
+    # Override the get_db dependency to use the shared test session
     def override_get_db():
         yield test_db_session
 
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[app_main.get_db] = override_get_db
 
     with TestClient(app) as client:
         yield client
