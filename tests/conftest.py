@@ -2,6 +2,7 @@
 
 This module contains common fixtures used across all test modules to ensure
 proper isolation and consistent behavior of tests regardless of execution order.
+Fixes include aligning test schema with app models and proper async mocking.
 """
 
 import sys
@@ -22,53 +23,31 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 @pytest.fixture(scope="session")
 def test_db_engine():
     """Create a test database engine using in-memory SQLite."""
-    # Import here to avoid import issues
-    from sqlalchemy import Column, DateTime, Integer, String, Text
-    from sqlalchemy.ext.declarative import declarative_base
-    from sqlalchemy.sql import func
-
-    # Create test engine
     engine = create_engine(
         "sqlite:///:memory:",
-        echo=False,  # Set to True for SQL debugging
+        echo=False,
         connect_args={"check_same_thread": False},
     )
-
-    # Define models directly in test to avoid import complications
-    Base = declarative_base()
-
-    class ClockUpdate(Base):
-        """Test model for ClockUpdate."""
-
-        __tablename__ = "clock_updates"
-
-        id = Column(Integer, primary_key=True, index=True)
-        message_id = Column(Integer, unique=True, index=True, nullable=False)
-        content = Column(Text, nullable=False)
-        time_value = Column(String(50), nullable=True)
-        created_at = Column(DateTime(timezone=True), server_default=func.now())
-        updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-    # Create all tables
-    Base.metadata.create_all(bind=engine)
-
     yield engine
-
-    # Cleanup
     engine.dispose()
 
 
 @pytest.fixture
 def test_db_session(test_db_engine) -> Generator[Session, None, None]:
-    """Create a test database session with automatic rollback."""
+    """Create a fresh test DB schema and session per test."""
+    # Use the application's models metadata to ensure schema matches (including image_data)
+    from app.models import Base
+
+    Base.metadata.create_all(bind=test_db_engine)
     TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_db_engine)
     session = TestSessionLocal()
 
     try:
         yield session
     finally:
-        session.rollback()
         session.close()
+        # Drop all tables to isolate tests
+        Base.metadata.drop_all(bind=test_db_engine)
 
 
 @pytest.fixture
@@ -94,6 +73,13 @@ def test_client(test_db_session, mocker):
         },
         clear=False,
     )
+
+    # Patch migrations to use the test engine (prevents touching local file DB)
+    try:
+        import app.migrations as migrations_module
+        migrations_module.engine = test_db_session.bind
+    except Exception:
+        pass
 
     # Now import after environment is mocked
     from app.main import app
@@ -134,7 +120,7 @@ def test_clock_update_model(test_db_session, mocker):
 
 @pytest.fixture
 def mock_telegram_service():
-    """Mock Telegram service for testing."""
+    """Mock Telegram service for testing with proper async methods."""
     from app.telegram_api.client import TelegramService
 
     mock_service = MagicMock(spec=TelegramService)
@@ -143,6 +129,9 @@ def mock_telegram_service():
     mock_service.connect = AsyncMock()
     mock_service.disconnect = AsyncMock()
     mock_service.get_latest_messages = AsyncMock()
+    mock_service.get_message_image_data = AsyncMock(return_value=None)
+
+    # Synchronous helper
     mock_service.extract_time_from_message = MagicMock()
 
     return mock_service

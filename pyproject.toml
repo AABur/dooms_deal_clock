@@ -144,6 +144,9 @@ select = [
     "I", # isort
 ]
 external = ["WPS"]
+ignore = [
+    "B008", # FastAPI: Depends in parameter defaults is intentional
+]
 
 exclude = [
     ".git",
