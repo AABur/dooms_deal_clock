@@ -76,10 +76,14 @@ body {
     flex: 0 0 520px;
     height: 520px;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 .message-content {
+    /* Height is set dynamically via JS to (520px - time-header height) */
     animation: scrollUp 30s linear infinite;
+    overflow: hidden;
 }
 
 @keyframes scrollUp {
@@ -121,8 +125,10 @@ body {
 /* Time display header styles */
 .time-header {
     font-size: 24px;
-    margin-bottom: 32px;
-    white-space: nowrap;
+    /* Header sits above the scroll area; spacing via padding */
+    padding-bottom: 12px;
+    margin-bottom: 0;
+    white-space: normal;
 }
 
 .time-header strong {
