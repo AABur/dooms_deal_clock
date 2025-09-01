@@ -1,4 +1,4 @@
-"""API endpoint tests for FastAPI app in app.main."""
+"""Unit tests for app/main.py (API endpoints)."""
 
 from datetime import UTC, datetime, timedelta
 
@@ -142,3 +142,4 @@ async def test_reload_endpoint_error_returns_500(test_client, monkeypatch):
 
     resp = test_client.post("/api/clock/reload/123")
     assert resp.status_code == 500
+

@@ -1,4 +1,4 @@
-"""Focused tests for models.py module (pytest-mock, functions only)."""
+"""Unit tests for app/models.py."""
 
 
 def test_create_tables_function_calls_metadata(mocker):
@@ -80,3 +80,4 @@ def test_models_uses_config(mocker):
     import app.models as models_module
 
     assert models_module.config == mock_config
+
