@@ -81,7 +81,7 @@ def test_client(test_db_session, mocker):
         clear=False,
     )
 
-    # Patch app models and migrations to use the test engine/session
+    # Patch app models to use the test engine/session (no migrations in dev)
     try:
         from sqlalchemy.orm import sessionmaker as _sessionmaker
 
@@ -90,9 +90,6 @@ def test_client(test_db_session, mocker):
         models_module.engine = test_db_session.bind
         models_module.SessionLocal = _sessionmaker(autocommit=False, autoflush=False, bind=test_db_session.bind)
 
-        import app.migrations as migrations_module
-
-        migrations_module.engine = test_db_session.bind
     except Exception:
         pass
 
