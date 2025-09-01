@@ -181,20 +181,21 @@ body {
 /* Promo links under the image */
 .promo-links {
     margin-top: 16px;
-    font-size: 14px;
+    font-family: 'Montserrat', sans-serif; /* same family as time-header strong */
+    font-size: 18px; /* a bit smaller than time-header (24px) */
     line-height: 1.5;
-    color: #cccccc;
+    color: #ffffff; /* white text */
     text-align: left;
     width: 100%;
 }
 
 .promo-links a {
-    color: #4da6ff;
-    text-decoration: underline;
+    color: #ffffff; /* inherit white color */
+    text-decoration: underline; /* keep underline */
 }
 
 .promo-links a:hover {
-    color: #66b3ff;
+    color: #dddddd; /* subtle hover */
 }
 
 /* Responsive design for mobile devices */
