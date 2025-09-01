@@ -48,3 +48,11 @@
 2. Consider architectural changes to improve testability
 3. Implement integration tests with real database for complex services
 4. Document testing limitations and workarounds for future development
+
+## Frontend Layout Notes (to remind later)
+
+- Completed: message pane split into fixed `time-header` (top) and scrollable `message-content` (bottom). Header aligned with image top; scroll constrained to lower pane.
+- Suggestion: consider setting explicit min/max height for `time-header` to stabilize layout across varying header content.
+  - Option A: `.time-header { min-height: 56px; max-height: 120px; overflow: hidden; }`
+  - Option B: responsive size via media queries and clamp() for font-size.
+  - Decision pending — revisit after visual QA on multiple messages.
