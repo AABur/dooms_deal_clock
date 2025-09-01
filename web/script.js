@@ -299,7 +299,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.warn('Сервер недоступен, работаем в оффлайн режиме');
     }
 
-    // No explicit resize handler needed: flex layout sizes the scroll area automatically
+    // Recalc layout on resize and after image loads
+    window.addEventListener('resize', () => {
+        if (window.requestAnimationFrame) {
+            window.requestAnimationFrame(() => window.updateClock());
+        } else {
+            window.updateClock();
+        }
+    });
+    const img = document.getElementById('clockImage');
+    if (img) img.addEventListener('load', () => window.updateClock());
 });
 
 // Export functions to global window object for debugging and external access
@@ -314,6 +323,19 @@ window.updateClock = updateClock;
         originalUpdate();
         // Recalc marquee (heights) and start animation if needed
         setTimeout(() => {
+            // Sync right column height to left (image + links)
+            const leftCol = document.querySelector('.telegram-image');
+            const rightCol = document.querySelector('.message-content');
+            const header = document.getElementById('timeHeader');
+            const scrollPane = document.querySelector('.message-scroll');
+            if (leftCol && rightCol && header && scrollPane) {
+                const leftH = leftCol.offsetHeight || 520;
+                rightCol.style.height = `${leftH}px`;
+                const headerH = header.offsetHeight || 0;
+                const viewH = Math.max(0, leftH - headerH);
+                scrollPane.style.height = `${viewH}px`;
+            }
+
             const container = document.querySelector('.message-scroll');
             const first = document.getElementById('messageText');
             const wrapper = document.querySelector('.marquee');
