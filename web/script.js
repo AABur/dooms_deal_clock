@@ -85,16 +85,16 @@ function updateClock() {
         hasContent: !!appState.clockData.content
     });
     
-    const messageContent = document.getElementById('messageContent');
+    const messageText = document.getElementById('messageText');
     const timeHeader = document.getElementById('timeHeader');
-    if (messageContent && timeHeader) {
+    if (messageText && timeHeader) {
         if (appState.clockData.content) {
             const { headerHtml, bodyHtml } = formatTelegramMessage(appState.clockData.content);
             timeHeader.innerHTML = headerHtml;
-            messageContent.innerHTML = bodyHtml || '';
+            messageText.innerHTML = bodyHtml || '';
         } else {
             timeHeader.innerHTML = '';
-            messageContent.textContent = appState.isConnected ?
+            messageText.textContent = appState.isConnected ?
                 'Сообщение не найдено' :
                 'Нет подключения к серверу';
         }
