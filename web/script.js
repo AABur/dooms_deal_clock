@@ -306,3 +306,42 @@ document.addEventListener('DOMContentLoaded', async function() {
 window.fetchClockData = fetchClockData;
 window.checkServerStatus = checkServerStatus;
 window.updateClock = updateClock;
+
+// Start marquee loop after DOM ready and on updates
+(function hookMarquee() {
+    const originalUpdate = updateClock;
+    window.updateClock = function wrappedUpdate() {
+        originalUpdate();
+        // Recalc marquee (heights) and start animation if needed
+        setTimeout(() => {
+            const container = document.querySelector('.message-scroll');
+            const first = document.getElementById('messageText');
+            const wrapper = document.querySelector('.marquee');
+            if (!container || !first || !wrapper) return;
+            // If we have duplicate block, ensure continuous scroll
+            const clone = document.getElementById('messageTextClone');
+            if (clone) {
+                // measure and start animation only if content taller than viewport
+                const contentH = first.scrollHeight;
+                const viewH = container.clientHeight;
+                if (contentH > viewH) {
+                    let lastTs = performance.now();
+                    function step(ts) {
+                        const dt = (ts - lastTs) / 1000; lastTs = ts;
+                        marqueeState.offset += marqueeState.speed * dt;
+                        const limit = contentH;
+                        if (marqueeState.offset >= limit) marqueeState.offset -= limit;
+                        wrapper.style.transform = `translateY(-${marqueeState.offset}px)`;
+                        marqueeState.rafId = requestAnimationFrame(step);
+                    }
+                    if (marqueeState.rafId) cancelAnimationFrame(marqueeState.rafId);
+                    marqueeState.offset = 0;
+                    marqueeState.rafId = requestAnimationFrame(step);
+                } else {
+                    if (marqueeState.rafId) cancelAnimationFrame(marqueeState.rafId);
+                    wrapper.style.transform = 'translateY(0)';
+                }
+            }
+        }, 0);
+    };
+})();

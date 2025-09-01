@@ -94,17 +94,13 @@ body {
     display: flex;
     flex-direction: column;
     will-change: transform;
-    animation: scrollContinuous 30s linear infinite;
 }
 
 .message-text {
     overflow: hidden;
 }
 
-@keyframes scrollContinuous {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(-50%); } /* because marquee contains two equal blocks */
-}
+/* JS drives marquee transform; no CSS keyframes here */
 
 .message-text {
     color: #ffffff;
