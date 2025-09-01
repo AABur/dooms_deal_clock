@@ -357,6 +357,11 @@ function startMarquee() {
     const speed = marqueeState.speed || 30; // px/s
     const durationSec = Math.max(1, contentH / speed);
     wrapper.style.setProperty('--scroll-distance', `${contentH}px`);
+    // Перезапуск анимации (сброс)
+    wrapper.style.animation = 'none';
+    // Force reflow to restart animation cleanly
+    // eslint-disable-next-line no-unused-expressions
+    wrapper.offsetHeight;
     wrapper.style.animationName = 'scrollContinuous';
     wrapper.style.animationTimingFunction = 'linear';
     wrapper.style.animationIterationCount = 'infinite';
