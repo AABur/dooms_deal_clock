@@ -1,6 +1,6 @@
 """API endpoint tests for FastAPI app in app.main."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -20,7 +20,7 @@ def _add_update(
         content=content,
         time_value=time_value,
         image_data=image_data,
-        created_at=created_at or datetime.utcnow(),
+        created_at=created_at or datetime.now(UTC),
     )
     db.add(update)
     db.commit()
@@ -51,9 +51,9 @@ def test_latest_404_when_no_updates(test_client):
 
 def test_latest_returns_latest_update(test_client, test_db_session):
     # Older
-    _add_update(test_db_session, 1, "10:00", "First", datetime.utcnow() - timedelta(hours=1))
+    _add_update(test_db_session, 1, "10:00", "First", datetime.now(UTC) - timedelta(hours=1))
     # Newer
-    newest = _add_update(test_db_session, 2, "11:00", "Second", datetime.utcnow(), image_data="YmFzZTY0")
+    newest = _add_update(test_db_session, 2, "11:00", "Second", datetime.now(UTC), image_data="YmFzZTY0")
 
     resp = test_client.get("/api/clock/latest")
     assert resp.status_code == 200
@@ -66,7 +66,7 @@ def test_latest_returns_latest_update(test_client, test_db_session):
 
 
 def test_history_pagination_and_order(test_client, test_db_session):
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     _add_update(test_db_session, 101, "10:00", "A", now - timedelta(minutes=3))
     _add_update(test_db_session, 102, "11:00", "B", now - timedelta(minutes=2))
     _add_update(test_db_session, 103, "12:00", "C", now - timedelta(minutes=1))
@@ -114,7 +114,7 @@ async def test_fetch_endpoint_failure_returns_500(test_client, monkeypatch):
 @pytest.mark.asyncio
 async def test_reload_endpoint_deletes_and_refetches(test_client, test_db_session, monkeypatch):
     # Insert existing record
-    _add_update(test_db_session, 777, "09:00", "Old", datetime.utcnow())
+    _add_update(test_db_session, 777, "09:00", "Old", datetime.now(UTC))
 
     import app.main as main_module
 

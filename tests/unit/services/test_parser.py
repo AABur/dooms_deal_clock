@@ -11,79 +11,53 @@ def parser():
     return MessageParser()
 
 
-def test_parse_message_with_time_hhmm(parser):
-    """Test parsing message with HH:MM format."""
-    message = "🕐 23:42 - Дедлайн приближается! Время до заключения соглашения."
-
+@pytest.mark.parametrize(
+    "message,expected_time,expected_in_description",
+    [
+        ("🕐 23:42 - Дедлайн приближается! Время до заключения соглашения.", "23:42:00", "Дедлайн приближается"),
+        ("⏰ 15:30:45 до судного договора остается совсем немного времени", "15:30:45", "до судного договора остается"),
+        ("🔔 12.15 - время заключения сделки приближается", "12:15:00", "время заключения сделки"),
+        ("⚡ 09.25.30 секунд до договора", "09:25:30", "секунд до договора"),
+    ],
+)
+def test_parse_message_time_patterns(parser, message, expected_time, expected_in_description):
+    """Parse messages with different time formats and verify outputs."""
+    # Arrange is done by parameters
+    # Act
     result = parser.parse_message(message)
-
+    # Assert
     assert result is not None
-    assert result.time == "23:42:00"
-    assert "Дедлайн приближается" in result.description
+    assert result.time == expected_time
+    assert expected_in_description in result.description
     assert result.raw_message == message
 
 
-def test_parse_message_with_time_hhmmss(parser):
-    """Test parsing message with HH:MM:SS format."""
-    message = "⏰ 15:30:45 до судного договора остается совсем немного времени"
-
-    result = parser.parse_message(message)
-
-    assert result is not None
-    assert result.time == "15:30:45"
-    assert "до судного договора остается" in result.description
-
-
-def test_parse_message_with_dots_format(parser):
-    """Test parsing message with dots format (HH.MM)."""
-    message = "🔔 12.15 - время заключения сделки приближается"
-
-    result = parser.parse_message(message)
-
-    assert result is not None
-    assert result.time == "12:15:00"
-    assert "время заключения сделки" in result.description
+@pytest.mark.parametrize(
+    "message",
+    [
+        "This is just a regular message with 12:30 but no relevant keywords",
+    ],
+)
+def test_parse_message_no_keywords(parser, message):
+    """Messages without keywords should not parse to ClockData."""
+    assert parser.parse_message(message) is None
 
 
-def test_parse_message_with_dots_and_seconds(parser):
-    """Test parsing message with dots format (HH.MM.SS)."""
-    message = "⚡ 09.25.30 секунд до договора"
-
-    result = parser.parse_message(message)
-
-    assert result is not None
-    assert result.time == "09:25:30"
-    assert "секунд до договора" in result.description
-
-
-def test_parse_message_no_keywords(parser):
-    """Test parsing message without clock keywords."""
-    message = "This is just a regular message with 12:30 but no relevant keywords"
-
-    result = parser.parse_message(message)
-
-    assert result is None
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Время договора судного приближается но никто не знает когда",
+    ],
+)
+def test_parse_message_no_time(parser, message):
+    """Messages with keywords but without time should not parse."""
+    assert parser.parse_message(message) is None
 
 
-def test_parse_message_no_time(parser):
-    """Test parsing message with keywords but no time."""
-    message = "Время договора судного приближается но никто не знает когда"
-
-    result = parser.parse_message(message)
-
-    assert result is None
-
-
-def test_parse_message_empty_text(parser):
-    """Test parsing empty message."""
-    result = parser.parse_message("")
-    assert result is None
-
-    result = parser.parse_message(None)
-    assert result is None
-
-    result = parser.parse_message("   ")
-    assert result is None
+@pytest.mark.parametrize("message", ["", None, "   "])
+def test_parse_message_empty_text(parser, message):
+    """Empty or whitespace messages should return None."""
+    assert parser.parse_message(message) is None
 
 
 def test_parse_message_multiple_times(parser):
@@ -97,9 +71,9 @@ def test_parse_message_multiple_times(parser):
     assert result.time == "23:42:00"
 
 
-def test_contains_clock_keywords(parser):
-    """Test keyword detection."""
-    test_cases = [
+@pytest.mark.parametrize(
+    "text,expected",
+    [
         ("время до договора", True),
         ("часы судного дня", True),
         ("минуты до сделки", True),
@@ -109,58 +83,55 @@ def test_contains_clock_keywords(parser):
         ("", False),
         ("время", True),  # Single keyword should match
         ("ВРЕМЯ ДОГОВОР", True),  # Case insensitive
-    ]
+    ],
+)
+def test_contains_clock_keywords(parser, text, expected):
+    assert parser._contains_clock_keywords(text.lower()) == expected
 
-    for text, expected in test_cases:
-        result = parser._contains_clock_keywords(text.lower())
-        assert result == expected, f"Failed for text: '{text}'"
 
-
-def test_extract_time_various_formats(parser):
-    """Test time extraction with various formats."""
-    test_cases = [
+@pytest.mark.parametrize(
+    "text,expected",
+    [
         ("Current time is 14:25", "14:25:00"),
         ("Time: 09:05:30", "09:05:30"),
         ("Time is 7:45", "07:45:00"),
         ("Format 23.59", "23:59:00"),
         ("Format 12.34.56", "12:34:56"),
         ("No time here", None),
-        ("Invalid 25:70", "25:70:00"),  # Parser doesn't validate, just formats
+        ("Invalid 25:70", "25:70:00"),
         ("", None),
-    ]
+    ],
+)
+def test_extract_time_various_formats(parser, text, expected):
+    assert parser._extract_time(text) == expected
 
-    for text, expected in test_cases:
-        result = parser._extract_time(text)
-        assert result == expected, f"Failed for text: '{text}'"
 
-
-def test_extract_description_removes_time(parser):
-    """Test description extraction removes time and formats properly."""
-    test_cases = [
+@pytest.mark.parametrize(
+    "message,expected_part",
+    [
         ("🕐 23:42 - Дедлайн приближается!", "- Дедлайн приближается!"),
         ("⏰ 15:30 время договора настало", "время договора настало"),
         ("12.30 - сделка судного дня", "- сделка судного дня"),
         ("🔔 09:15:30 секунды до соглашения", "секунды до соглашения"),
-    ]
+    ],
+)
+def test_extract_description_removes_time(parser, message, expected_part):
+    result = parser._extract_description(message, "doesn't matter")
+    assert expected_part in result
+    # Should not contain a time pattern
+    assert not any(ch.isdigit() and ":" in result for ch in result)
 
-    for message, expected_part in test_cases:
-        result = parser._extract_description(message, "doesn't matter")
-        assert expected_part in result
-        # Should not contain time pattern
-        assert not any(char.isdigit() and ":" in result for char in result)
 
-
-def test_extract_description_default_fallback(parser):
-    """Test description fallback for short or empty descriptions."""
-    test_cases = [
+@pytest.mark.parametrize(
+    "message,expected",
+    [
         ("🕐 23:42", "Время до заключения эпохального соглашения"),
         ("⏰ 15:30   ", "Время до заключения эпохального соглашения"),
         ("12:30 - short", "Время до заключения эпохального соглашения"),
-    ]
-
-    for message, expected in test_cases:
-        result = parser._extract_description(message, "12:30")
-        assert result == expected
+    ],
+)
+def test_extract_description_default_fallback(parser, message, expected):
+    assert parser._extract_description(message, "12:30") == expected
 
 
 def test_extract_description_length_limit(parser):

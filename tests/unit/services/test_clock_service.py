@@ -1,7 +1,6 @@
 """Tests for the clock service module - only working tests."""
 
-from datetime import datetime
-from unittest.mock import MagicMock
+from datetime import UTC, datetime
 
 import pytest
 
@@ -48,7 +47,7 @@ async def test_fetch_and_store_updates_duplicate_message(clock_service, test_db_
     """Test that duplicate messages are not stored."""
     # Setup: Add existing message to database
     existing_update = ClockUpdate(
-        message_id=12345, content="Existing message", time_value="12:00", created_at=datetime.utcnow()
+        message_id=12345, content="Existing message", time_value="12:00", created_at=datetime.now(UTC)
     )
     test_db_session.add(existing_update)
     test_db_session.commit()
@@ -68,10 +67,10 @@ async def test_fetch_and_store_updates_duplicate_message(clock_service, test_db_
 
 
 @pytest.mark.asyncio
-async def test_fetch_and_store_updates_no_text_message(clock_service, test_db_session):
+async def test_fetch_and_store_updates_no_text_message(clock_service, test_db_session, mocker):
     """Test handling of messages without text."""
     # Create message without text
-    message_without_text = MagicMock()
+    message_without_text = mocker.MagicMock()
     message_without_text.text = None
     message_without_text.id = 12345
 
@@ -89,15 +88,15 @@ async def test_fetch_and_store_updates_no_text_message(clock_service, test_db_se
 
 
 @pytest.mark.asyncio
-async def test_fetch_and_store_updates_multiple_messages(clock_service, test_db_session):
+async def test_fetch_and_store_updates_multiple_messages(clock_service, test_db_session, mocker):
     """Test handling of multiple messages."""
     # Create multiple messages
-    message1 = MagicMock()
+    message1 = mocker.MagicMock()
     message1.id = 1
     message1.text = "First message with time 10:30"
     message1.date = datetime(2024, 1, 1, 10, 30, 0)
 
-    message2 = MagicMock()
+    message2 = mocker.MagicMock()
     message2.id = 2
     message2.text = "Second message with time 15:45"
     message2.date = datetime(2024, 1, 1, 15, 45, 0)

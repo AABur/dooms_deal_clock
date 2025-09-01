@@ -9,7 +9,6 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Generator
-from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -92,14 +91,15 @@ def test_client(test_db_session, mocker):
         models_module.SessionLocal = _sessionmaker(autocommit=False, autoflush=False, bind=test_db_session.bind)
 
         import app.migrations as migrations_module
+
         migrations_module.engine = test_db_session.bind
     except Exception:
         pass
 
     # Now import after environment is mocked
     import app.main as app_main
-    from app.main import app
     import app.models as models_module
+    from app.main import app
 
     # Override the get_db dependency to use the shared test session
     def override_get_db():
@@ -135,30 +135,28 @@ def test_clock_update_model(test_db_session, mocker):
 
 
 @pytest.fixture
-def mock_telegram_service():
-    """Mock Telegram service for testing with proper async methods."""
+def mock_telegram_service(mocker):
+    """Mock Telegram service using pytest-mock."""
     from app.telegram_api.client import TelegramService
 
-    mock_service = MagicMock(spec=TelegramService)
-
-    # Mock async methods
-    mock_service.connect = AsyncMock()
-    mock_service.disconnect = AsyncMock()
-    mock_service.get_latest_messages = AsyncMock()
-    mock_service.get_message_image_data = AsyncMock(return_value=None)
-
-    # Synchronous helper
-    mock_service.extract_time_from_message = MagicMock()
+    mock_service = mocker.Mock(spec=TelegramService)
+    # Async methods
+    mock_service.connect = mocker.AsyncMock()
+    mock_service.disconnect = mocker.AsyncMock()
+    mock_service.get_latest_messages = mocker.AsyncMock()
+    mock_service.get_message_image_data = mocker.AsyncMock(return_value=None)
+    # Sync helper
+    mock_service.extract_time_from_message = mocker.MagicMock()
 
     return mock_service
 
 
 @pytest.fixture
-def mock_telegram_message():
+def mock_telegram_message(mocker):
     """Create a mock Telegram message."""
     from datetime import datetime
 
-    message = MagicMock()
+    message = mocker.MagicMock()
     message.id = 12345
     message.text = "🕐 23:42 - Дедлайн приближается!"
     message.date = datetime(2024, 1, 1, 23, 42, 0)
@@ -220,29 +218,26 @@ def temp_directory():
 
 
 @pytest.fixture
-def mock_clock_service(mock_telegram_service):
-    """Mock ClockService for testing."""
+def mock_clock_service(mocker, mock_telegram_service):
+    """Mock ClockService using pytest-mock."""
     from app.services.clock_service import ClockService
 
-    mock_service = MagicMock(spec=ClockService)
+    mock_service = mocker.Mock(spec=ClockService)
     mock_service.telegram_service = mock_telegram_service
-
-    # Mock async methods
-    mock_service.fetch_and_store_updates = AsyncMock()
-    mock_service.get_latest_update = MagicMock()
-    mock_service.get_time_remaining = MagicMock()
-
+    mock_service.fetch_and_store_updates = mocker.AsyncMock()
+    mock_service.get_latest_update = mocker.MagicMock()
+    mock_service.get_time_remaining = mocker.MagicMock()
     return mock_service
 
 
 @pytest.fixture
 def authorized_telegram_client(mocker):
     """Mock authorized Telegram client."""
-    mock_client = MagicMock()
-    mock_client.connect = AsyncMock()
-    mock_client.disconnect = AsyncMock()
-    mock_client.is_connected = MagicMock(return_value=True)
-    mock_client.get_messages = AsyncMock()
+    mock_client = mocker.MagicMock()
+    mock_client.connect = mocker.AsyncMock()
+    mock_client.disconnect = mocker.AsyncMock()
+    mock_client.is_connected = mocker.MagicMock(return_value=True)
+    mock_client.get_messages = mocker.AsyncMock()
 
     mocker.patch("app.telegram_api.client.TelegramClient", return_value=mock_client)
 
