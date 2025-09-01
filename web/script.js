@@ -32,38 +32,47 @@ const appState = {
 };
 
 /**
- * Format Telegram message content with HTML markup and styling
+ * Split Telegram message into header and body, with HTML markup for the body
  * @param {string} content - Raw Telegram message content
- * @returns {string} HTML formatted message content
+ * @returns {{ headerHtml: string, bodyHtml: string }} Formatted parts
  */
 function formatTelegramMessage(content) {
     console.log('Formatting Telegram message:', content);
-    
-    if (!content) return '';
-    
-    let formatted = content;
-    
-    formatted = formatted.replace(/^\*\*(\d{2}:\d{2}:\d{2})/m, '$1');
-    
-    formatted = formatted.replace(/^(\d{2}:\d{2}:\d{2}\s+\([^)]+\)\s*\|\s*\d+\s+секунд[ау]?\s+\([^)]+\))\n\n/m, 
-        '<div class="time-header"><strong>$1</strong></div>');
-    
-    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
-    formatted = formatted.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
-    
-    formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-    
-    formatted = formatted.replace(/🟡/g, '<span class="emoji-indicator yellow">🟡</span>');
-    formatted = formatted.replace(/🟢/g, '<span class="emoji-indicator green">🟢</span>');
-    formatted = formatted.replace(/🔴/g, '<span class="emoji-indicator red">🔴</span>');
-    
-    formatted = formatted.replace(/\n/g, '<br>');
-    
-    formatted = formatted.replace(/\*\*<br>Другие новости/g, '<br>Другие новости');
-    
-    console.log('Formatted message:', formatted);
-    return formatted;
+
+    if (!content) return { headerHtml: '', bodyHtml: '' };
+
+    let headerHtml = '';
+    let body = content;
+
+    // Remove bold asterisks before time if present
+    body = body.replace(/^\*\*(\d{2}:\d{2}:\d{2})/m, '$1');
+
+    // Extract leading time header line if present
+    const headerMatch = body.match(/^(\d{2}:\d{2}:\d{2}\s+\([^)]+\)\s*\|\s*\d+\s+секунд[ау]?\s+\([^)]+\))\n\n/m);
+    if (headerMatch) {
+        headerHtml = `<strong>${headerMatch[1]}</strong>`;
+        body = body.replace(headerMatch[0], '');
+    }
+
+    // Emulate simple Markdown formatting in the body
+    body = body.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    body = body.replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, '<em>$1</em>');
+    body = body.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+    // Emoji indicators
+    body = body.replace(/🟡/g, '<span class="emoji-indicator yellow">🟡</span>');
+    body = body.replace(/🟢/g, '<span class="emoji-indicator green">🟢</span>');
+    body = body.replace(/🔴/g, '<span class="emoji-indicator red">🔴</span>');
+
+    // Line breaks
+    body = body.replace(/\n/g, '<br>');
+
+    // Cleanup duplicated header markers
+    body = body.replace(/\*\*<br>Другие новости/g, '<br>Другие новости');
+
+    const result = { headerHtml, bodyHtml: body };
+    console.log('Formatted message parts:', result);
+    return result;
 }
 
 /**
@@ -77,12 +86,16 @@ function updateClock() {
     });
     
     const messageContent = document.getElementById('messageContent');
-    if (messageContent) {
+    const timeHeader = document.getElementById('timeHeader');
+    if (messageContent && timeHeader) {
         if (appState.clockData.content) {
-            messageContent.innerHTML = formatTelegramMessage(appState.clockData.content);
+            const { headerHtml, bodyHtml } = formatTelegramMessage(appState.clockData.content);
+            timeHeader.innerHTML = headerHtml;
+            messageContent.innerHTML = bodyHtml || '';
         } else {
-            messageContent.textContent = appState.isConnected ? 
-                'Сообщение не найдено' : 
+            timeHeader.innerHTML = '';
+            messageContent.textContent = appState.isConnected ?
+                'Сообщение не найдено' :
                 'Нет подключения к серверу';
         }
     }
