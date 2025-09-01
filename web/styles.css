@@ -177,6 +177,25 @@ body {
     padding: 40px;
 }
 
+/* Promo links under the image */
+.promo-links {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #cccccc;
+    text-align: left;
+    width: 100%;
+}
+
+.promo-links a {
+    color: #4da6ff;
+    text-decoration: underline;
+}
+
+.promo-links a:hover {
+    color: #66b3ff;
+}
+
 /* Responsive design for mobile devices */
 @media (max-width: 768px) {
     .content-layout {

@@ -42,7 +42,7 @@ function formatTelegramMessage(content) {
     if (!content) return { headerHtml: '', bodyHtml: '' };
 
     let headerHtml = '';
-    let body = content;
+    let body = content || '';
 
     // Remove bold asterisks before time if present
     body = body.replace(/^\*\*(\d{2}:\d{2}:\d{2})/m, '$1');
@@ -53,6 +53,10 @@ function formatTelegramMessage(content) {
         headerHtml = `<strong>${headerMatch[1]}</strong>`;
         body = body.replace(headerMatch[0], '');
     }
+
+    // Remove trailing promo block(s) and collect links for left pane
+    const promo = extractPromoLinks(body);
+    body = promo.cleaned;
 
     // Emulate simple Markdown formatting in the body
     body = body.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
@@ -70,9 +74,45 @@ function formatTelegramMessage(content) {
     // Cleanup duplicated header markers
     body = body.replace(/\*\*<br>Другие новости/g, '<br>Другие новости');
 
-    const result = { headerHtml, bodyHtml: body };
+    const result = { headerHtml, bodyHtml: body, promoHtml: promo.html };
     console.log('Formatted message parts:', result);
     return result;
+}
+
+/**
+ * Extract trailing promo lines from raw text and return cleaned text + promo HTML
+ * Handles two known variants of the footer content.
+ * @param {string} text
+ * @returns {{ cleaned: string, html: string }}
+ */
+function extractPromoLinks(text) {
+    let cleaned = text.trimEnd();
+    let html = '';
+
+    // Variant B: three sentences with parenthetical URLs
+    const reThree = /Свежий\s+договорняковый\s+дайджест\.\s*\((https?:\/\/[^\s)]+)\)\s*Поддержать\s+проект\.\s*\((https?:\/\/[^\s)]+)\)\s*Часы\s+судного\s+договорняка\.\s*\((https?:\/\/[^\s)]+)\)\s*$/ims;
+    const mThree = cleaned.match(reThree);
+    if (mThree) {
+        cleaned = cleaned.replace(reThree, '').trimEnd();
+        const [_, digestUrl, supportUrl, clockUrl] = mThree;
+        html = [
+            `<div><a href="${digestUrl}" target="_blank" rel="noopener">Свежий договорняковый дайджест</a>.</div>`,
+            `<div><a href="${supportUrl}" target="_blank" rel="noopener">Поддержать проект</a>.</div>`,
+            `<div><a href="${clockUrl}" target="_blank" rel="noopener">Часы судного договорняка</a>.</div>`
+        ].join('');
+        return { cleaned, html };
+    }
+
+    // Variant A: single line about digest
+    const reDigest = /Другие\s+новости\s+за\s+последние\s+дни\s+читайте\s+в\s+нашем\s+дайджесте\s*\((https?:\/\/[^\s)]+)\)\.?\s*$/ims;
+    const mDigest = cleaned.match(reDigest);
+    if (mDigest) {
+        cleaned = cleaned.replace(reDigest, '').trimEnd();
+        const digestUrl = mDigest[1];
+        html = `<div><a href="${digestUrl}" target="_blank" rel="noopener">Другие новости за последние дни — дайджест</a></div>`;
+    }
+
+    return { cleaned, html };
 }
 
 /**
@@ -87,16 +127,19 @@ function updateClock() {
     
     const messageText = document.getElementById('messageText');
     const timeHeader = document.getElementById('timeHeader');
+    const promoLinks = document.getElementById('promoLinks');
     if (messageText && timeHeader) {
         if (appState.clockData.content) {
-            const { headerHtml, bodyHtml } = formatTelegramMessage(appState.clockData.content);
+            const { headerHtml, bodyHtml, promoHtml } = formatTelegramMessage(appState.clockData.content);
             timeHeader.innerHTML = headerHtml;
             messageText.innerHTML = bodyHtml || '';
+            if (promoLinks) promoLinks.innerHTML = promoHtml || '';
         } else {
             timeHeader.innerHTML = '';
             messageText.textContent = appState.isConnected ?
                 'Сообщение не найдено' :
                 'Нет подключения к серверу';
+            if (promoLinks) promoLinks.innerHTML = '';
         }
     }
     
