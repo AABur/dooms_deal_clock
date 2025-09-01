@@ -34,3 +34,15 @@
 - Default DB is SQLite at `./clock_data.db`. Logs in `./logs/`. CORS is open for dev; review before production.
 - Background fetching isn’t auto-started; use `POST /api/clock/fetch` for manual updates.
 
+
+## Working Agreement
+- Change one axis at a time: either code or tests — never both in the same step.
+- Tests mirror modules: one module → one test file (or a module-named folder) to keep navigation simple.
+- Prefer function-style tests; avoid classes unless strictly needed for class-scope fixtures/marks.
+- Use `pytest-mock` for mocking; avoid `unittest.mock` directly in tests.
+- Follow AAA (Arrange–Act–Assert) with descriptive test names.
+- Parametrize to remove duplication and improve clarity.
+- Use English for identifiers, docstrings, and comments; keep Russian only where domain data requires it (e.g., parser inputs).
+- Run `make check` (format, lint, mypy, JS checks) before PRs; keep changes minimal and focused.
+- Do not alter unrelated code to satisfy tests; document behavioral changes and update tests in a dedicated, subsequent step.
+- Discuss and plan any refactor that intentionally breaks tests before implementation.
