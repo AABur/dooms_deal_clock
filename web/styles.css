@@ -99,6 +99,14 @@ body {
     animation-iteration-count: infinite;
 }
 
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
 .message-text {
     overflow: hidden;
 }
@@ -214,7 +222,25 @@ body {
     .telegram-image {
         flex: none;
         padding-right: 0;
-    }
+  }
+}
+
+/* Promo list items with icons */
+.promo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+.promo-icon {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+}
+.promo-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: #fff;
 }
 
 /* Channel header with Telegram icon */
