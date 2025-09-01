@@ -10,7 +10,6 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.migrations import run_migrations
 from app.models import ClockUpdate, create_tables, get_db
 from app.services.clock_service import ClockService
 from app.utils.logging import setup_logging
@@ -37,8 +36,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     create_tables()
     logger.info("Database tables created")
 
-    # Run migrations
-    run_migrations()
+    # No DB migrations in dev stage
 
     # Note: Background tasks not started automatically
     # Use POST /api/clock/fetch to manually fetch updates
