@@ -187,6 +187,13 @@ function updateClock() {
     if (contentLayout) {
         contentLayout.style.opacity = appState.isConnected ? '1' : '0.7';
     }
+
+    // After DOM update, recompute heights and (re)start marquee
+    if (window.requestAnimationFrame) {
+        window.requestAnimationFrame(startMarquee);
+    } else {
+        setTimeout(startMarquee, 0);
+    }
 }
 
 /**
@@ -302,13 +309,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Recalc layout on resize and after image loads
     window.addEventListener('resize', () => {
         if (window.requestAnimationFrame) {
-            window.requestAnimationFrame(() => window.updateClock());
+            window.requestAnimationFrame(() => startMarquee());
         } else {
-            window.updateClock();
+            startMarquee();
         }
     });
     const img = document.getElementById('clockImage');
-    if (img) img.addEventListener('load', () => window.updateClock());
+    if (img) img.addEventListener('load', () => startMarquee());
 });
 
 // Export functions to global window object for debugging and external access
@@ -316,54 +323,46 @@ window.fetchClockData = fetchClockData;
 window.checkServerStatus = checkServerStatus;
 window.updateClock = updateClock;
 
-// Start marquee loop after DOM ready and on updates
-(function hookMarquee() {
-    const originalUpdate = updateClock;
-    window.updateClock = function wrappedUpdate() {
-        originalUpdate();
-        // Recalc marquee (heights) and start animation if needed
-        setTimeout(() => {
-            // Sync right column height to left (image + links)
-            const leftCol = document.querySelector('.telegram-image');
-            const rightCol = document.querySelector('.message-content');
-            const header = document.getElementById('timeHeader');
-            const scrollPane = document.querySelector('.message-scroll');
-            if (leftCol && rightCol && header && scrollPane) {
-                const leftH = leftCol.offsetHeight || 520;
-                rightCol.style.height = `${leftH}px`;
-                const headerH = header.offsetHeight || 0;
-                const viewH = Math.max(0, leftH - headerH);
-                scrollPane.style.height = `${viewH}px`;
-            }
+/**
+ * Compute heights and start/stop continuous marquee scrolling
+ */
+function startMarquee() {
+    const leftCol = document.querySelector('.telegram-image');
+    const rightCol = document.querySelector('.message-content');
+    const header = document.getElementById('timeHeader');
+    const container = document.querySelector('.message-scroll');
+    const first = document.getElementById('messageText');
+    const clone = document.getElementById('messageTextClone');
+    const wrapper = document.querySelector('.marquee');
+    if (!(leftCol && rightCol && header && container && first && clone && wrapper)) return;
 
-            const container = document.querySelector('.message-scroll');
-            const first = document.getElementById('messageText');
-            const wrapper = document.querySelector('.marquee');
-            if (!container || !first || !wrapper) return;
-            // If we have duplicate block, ensure continuous scroll
-            const clone = document.getElementById('messageTextClone');
-            if (clone) {
-                // measure and start animation only if content taller than viewport
-                const contentH = first.scrollHeight;
-                const viewH = container.clientHeight;
-                if (contentH > viewH) {
-                    let lastTs = performance.now();
-                    function step(ts) {
-                        const dt = (ts - lastTs) / 1000; lastTs = ts;
-                        marqueeState.offset += marqueeState.speed * dt;
-                        const limit = contentH;
-                        if (marqueeState.offset >= limit) marqueeState.offset -= limit;
-                        wrapper.style.transform = `translateY(-${marqueeState.offset}px)`;
-                        marqueeState.rafId = requestAnimationFrame(step);
-                    }
-                    if (marqueeState.rafId) cancelAnimationFrame(marqueeState.rafId);
-                    marqueeState.offset = 0;
-                    marqueeState.rafId = requestAnimationFrame(step);
-                } else {
-                    if (marqueeState.rafId) cancelAnimationFrame(marqueeState.rafId);
-                    wrapper.style.transform = 'translateY(0)';
-                }
-            }
-        }, 0);
-    };
-})();
+    // Sync heights between columns
+    const leftH = leftCol.offsetHeight || 520;
+    rightCol.style.height = `${leftH}px`;
+    const headerH = header.offsetHeight || 0;
+    const viewH = Math.max(0, leftH - headerH);
+    container.style.height = `${viewH}px`;
+
+    // Measure content height
+    const contentH = first.scrollHeight;
+    if (contentH <= viewH) {
+        // No need to scroll
+        if (marqueeState.rafId) cancelAnimationFrame(marqueeState.rafId);
+        wrapper.style.transform = 'translateY(0)';
+        marqueeState.rafId = null;
+        return;
+    }
+
+    // Start rAF loop
+    if (marqueeState.rafId) cancelAnimationFrame(marqueeState.rafId);
+    marqueeState.offset = 0;
+    let lastTs = performance.now();
+    function step(ts) {
+        const dt = (ts - lastTs) / 1000; lastTs = ts;
+        marqueeState.offset += marqueeState.speed * dt;
+        if (marqueeState.offset >= contentH) marqueeState.offset -= contentH;
+        wrapper.style.transform = `translateY(-${marqueeState.offset}px)`;
+        marqueeState.rafId = requestAnimationFrame(step);
+    }
+    marqueeState.rafId = requestAnimationFrame(step);
+}
