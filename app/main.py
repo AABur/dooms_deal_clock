@@ -1,5 +1,6 @@
 """FastAPI main application module."""
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any, Dict
 
@@ -21,7 +22,7 @@ clock_service = ClockService()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Application lifespan manager.
 
     Args:

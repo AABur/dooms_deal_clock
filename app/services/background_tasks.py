@@ -12,11 +12,11 @@ from app.services.clock_service import ClockService
 class BackgroundTaskService:
     """Service for running background tasks."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the background task service."""
         self.clock_service = ClockService()
-        self.is_running = False
-        self.task = None
+        self.is_running: bool = False
+        self.task: asyncio.Task[None] | None = None
 
     async def start_periodic_updates(self) -> None:
         """Start periodic updates from Telegram channel."""
@@ -64,7 +64,7 @@ class BackgroundTaskService:
 
     def is_task_running(self) -> bool:
         """Check if background task is running."""
-        return self.is_running and self.task and not self.task.done()
+        return bool(self.is_running and self.task and not self.task.done())
 
 
 # Global background task service instance

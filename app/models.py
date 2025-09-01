@@ -1,8 +1,9 @@
 """Database models for the Dooms Deal Clock application."""
 
+from typing import Generator
+
 from sqlalchemy import Column, DateTime, Integer, String, Text, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.sql import func
 
 from app.config import config
@@ -10,7 +11,7 @@ from app.config import config
 Base = declarative_base()
 
 
-class ClockUpdate(Base):
+class ClockUpdate(Base):  # type: ignore[misc, valid-type]
     """Model for storing clock updates from Telegram channel."""
 
     __tablename__ = "clock_updates"
@@ -37,8 +38,8 @@ def create_tables() -> None:
     Base.metadata.create_all(bind=engine)
 
 
-def get_db():
-    """Get database session."""
+def get_db() -> Generator[Session, None, None]:
+    """Yield a database session."""
     db = SessionLocal()
     try:
         yield db

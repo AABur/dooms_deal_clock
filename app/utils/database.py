@@ -1,11 +1,11 @@
 import os
 import sys
 from datetime import datetime
+from typing import Generator
 
 from dotenv import load_dotenv
 from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 
 # Load configuration
 load_dotenv()
@@ -25,23 +25,23 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 
-class ClockUpdate(Base):
-    """Модель для хранения обновлений часов"""
+class ClockUpdate(Base):  # type: ignore[misc, valid-type]
+    """Model for storing clock updates."""
 
     __tablename__ = "clock_updates"
 
     id = Column(Integer, primary_key=True, index=True)
-    time = Column(String(8), nullable=False)  # Время в формате HH:MM:SS
-    description = Column(Text, nullable=False)  # Описание ситуации
-    raw_message = Column(Text, nullable=True)  # Исходное сообщение из Telegram
-    message_id = Column(Integer, nullable=True)  # ID сообщения в Telegram
+    time = Column(String(8), nullable=False)  # Time in HH:MM:SS
+    description = Column(Text, nullable=False)  # Description
+    raw_message = Column(Text, nullable=True)  # Original Telegram message
+    message_id = Column(Integer, nullable=True)  # Telegram message ID
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    is_active = Column(Boolean, default=True)  # Активная запись (последняя)
+    is_active = Column(Boolean, default=True)  # Active (latest) record flag
 
 
-class ParsedMessage(Base):
-    """Модель для логирования обработанных сообщений"""
+class ParsedMessage(Base):  # type: ignore[misc, valid-type]
+    """Model for logging processed messages."""
 
     __tablename__ = "parsed_messages"
 
@@ -57,13 +57,13 @@ class ParsedMessage(Base):
 Base.metadata.create_all(bind=engine)
 
 
-def create_tables():
+def create_tables() -> None:
     """Create database tables (for explicit calls)."""
     Base.metadata.create_all(bind=engine)
 
 
-def get_db():
-    """Dependency для получения сессии БД"""
+def get_db() -> Generator[Session, None, None]:
+    """Yield a database session (FastAPI dependency)."""
     db = SessionLocal()
     try:
         yield db

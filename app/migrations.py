@@ -6,7 +6,7 @@ from sqlalchemy import text
 from app.models import engine
 
 
-def add_image_data_column():
+def add_image_data_column() -> None:
     """Add image_data column to clock_updates table if it doesn't exist."""
     try:
         with engine.connect() as connection:
@@ -28,7 +28,7 @@ def add_image_data_column():
         raise
 
 
-def run_migrations():
+def run_migrations() -> None:
     """Run all pending migrations."""
     logger.info("Running database migrations...")
     add_image_data_column()

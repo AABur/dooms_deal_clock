@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from typing import Any
 
 from loguru import logger
 
@@ -68,7 +69,7 @@ def setup_logging() -> None:
     logger.info(f"Logging configured with level: {config.LOG_LEVEL}")
 
 
-def get_logger(name: str) -> "logger":
+def get_logger(name: str) -> Any:
     """Get a logger instance with the specified name.
 
     Args:

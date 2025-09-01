@@ -3,7 +3,7 @@
 import base64
 import io
 import re
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from loguru import logger
 from telethon import TelegramClient
@@ -15,12 +15,12 @@ from app.config import config
 class TelegramService:
     """Service for interacting with Telegram API."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Telegram client."""
         self.client = None
         self.channel_username = config.TELEGRAM_CHANNEL_USERNAME
 
-    def _get_client(self):
+    def _get_client(self) -> TelegramClient:
         """Get or create Telegram client."""
         if self.client is None:
             self.client = TelegramClient("dooms_deal_session", config.TELEGRAM_API_ID, config.TELEGRAM_API_HASH)
@@ -53,7 +53,7 @@ class TelegramService:
             logger.error(f"Error fetching messages: {e}")
             return []
 
-    async def get_channel_info(self) -> Optional[dict]:
+    async def get_channel_info(self) -> Optional[Dict[str, Any]]:
         """Get information about the channel."""
         try:
             client = self._get_client()

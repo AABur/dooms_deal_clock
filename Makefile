@@ -104,13 +104,19 @@ clean: ## Clean temporary files and cache
 
 # JavaScript/Frontend targets
 js-lint: ## Lint JavaScript code
-	@if [ -f package.json ]; then npm run lint; else echo "No package.json found, skipping JS lint"; fi
+	@if [ -f package.json ]; then \
+		if [ -d node_modules ]; then npm run lint; else echo "No node_modules found, skipping JS lint"; fi; \
+	else echo "No package.json found, skipping JS lint"; fi
 
 js-format: ## Format JavaScript code
-	@if [ -f package.json ]; then npm run format; else echo "No package.json found, skipping JS format"; fi
+	@if [ -f package.json ]; then \
+		if [ -d node_modules ]; then npm run format; else echo "No node_modules found, skipping JS format"; fi; \
+	else echo "No package.json found, skipping JS format"; fi
 
 js-check: ## Check JavaScript formatting and linting
-	@if [ -f package.json ]; then npm run check; else echo "No package.json found, skipping JS check"; fi
+	@if [ -f package.json ]; then \
+		if [ -d node_modules ]; then npm run check; else echo "No node_modules found, skipping JS check"; fi; \
+	else echo "No package.json found, skipping JS check"; fi
 
 # Run all checks (format, lint, type check)
 check: format lint mypy js-check ## Run all checks (format, lint, type check, JS)

@@ -130,17 +130,18 @@ class MessageParser:
         Returns:
             Dict with parsing results from different attempts
         """
-        results = {
+        found_times: list[dict[str, Any]] = []
+        results: dict[str, Any] = {
             "original_text": message_text,
             "has_keywords": self._contains_clock_keywords(message_text.lower()),
-            "found_times": [],
+            "found_times": found_times,
             "parsed_data": None,
         }
 
         for pattern in self.time_patterns:
             matches = re.findall(pattern, message_text)
             for match in matches:
-                results["found_times"].append({
+                found_times.append({
                     "pattern": pattern,
                     "match": match,
                     "formatted": self._format_time_match(match),
