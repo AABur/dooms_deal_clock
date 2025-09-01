@@ -66,7 +66,7 @@ body {
     flex: 0 0 520px;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start; /* align image top to match header top */
     min-height: 520px;
     padding-right: 26px;
 }
@@ -80,8 +80,14 @@ body {
     flex-direction: column;
 }
 
+/* Scroll container below the header fills remaining height */
+.message-scroll {
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
+}
+
 .message-content {
-    /* Height is set dynamically via JS to (520px - time-header height) */
     animation: scrollUp 30s linear infinite;
     overflow: hidden;
 }
@@ -125,7 +131,7 @@ body {
 /* Time display header styles */
 .time-header {
     font-size: 24px;
-    /* Header sits above the scroll area; spacing via padding */
+    /* Spacing below header */
     padding-bottom: 12px;
     margin-bottom: 0;
     white-space: normal;

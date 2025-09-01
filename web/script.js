@@ -87,8 +87,7 @@ function updateClock() {
     
     const messageContent = document.getElementById('messageContent');
     const timeHeader = document.getElementById('timeHeader');
-    const messageBox = document.querySelector('.message-text');
-    if (messageContent && timeHeader && messageBox) {
+    if (messageContent && timeHeader) {
         if (appState.clockData.content) {
             const { headerHtml, bodyHtml } = formatTelegramMessage(appState.clockData.content);
             timeHeader.innerHTML = headerHtml;
@@ -99,14 +98,6 @@ function updateClock() {
                 'Сообщение не найдено' :
                 'Нет подключения к серверу';
         }
-
-        // Adjust scroll area height to fill remaining space under header
-        requestAnimationFrame(() => {
-            const total = messageBox.clientHeight || 520;
-            const headerH = timeHeader.offsetHeight || 0;
-            const scrollH = Math.max(0, total - headerH);
-            messageContent.style.height = `${scrollH}px`;
-        });
     }
     
     const clockImage = document.getElementById('clockImage');
@@ -241,18 +232,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         console.warn('Сервер недоступен, работаем в оффлайн режиме');
     }
 
-    // Recalculate scroll area on window resize
-    window.addEventListener('resize', () => {
-        const messageContent = document.getElementById('messageContent');
-        const timeHeader = document.getElementById('timeHeader');
-        const messageBox = document.querySelector('.message-text');
-        if (messageContent && timeHeader && messageBox) {
-            const total = messageBox.clientHeight || 520;
-            const headerH = timeHeader.offsetHeight || 0;
-            const scrollH = Math.max(0, total - headerH);
-            messageContent.style.height = `${scrollH}px`;
-        }
-    });
+    // No explicit resize handler needed: flex layout sizes the scroll area automatically
 });
 
 // Export functions to global window object for debugging and external access
