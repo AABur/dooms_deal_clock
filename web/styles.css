@@ -57,7 +57,7 @@ body {
 .content-layout {
     display: flex;
     gap: 39px;
-    align-items: flex-start;
+    align-items: stretch; /* make right column match left column height */
     min-height: 520px;
 }
 
@@ -75,7 +75,8 @@ body {
 /* Message text (right side) */
 .message-content {
     flex: 0 0 520px;
-    height: 520px;
+    min-height: 520px;
+    height: auto; /* stretch with left column */
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -88,18 +89,21 @@ body {
     position: relative;
 }
 
+/* Continuous vertical marquee wrapper */
+.marquee {
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+    animation: scrollContinuous 30s linear infinite;
+}
+
 .message-text {
-    animation: scrollUp 30s linear infinite;
     overflow: hidden;
 }
 
-@keyframes scrollUp {
-    from {
-        transform: translateY(100%);
-    }
-    to {
-        transform: translateY(-100%);
-    }
+@keyframes scrollContinuous {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-50%); } /* because marquee contains two equal blocks */
 }
 
 .message-text {

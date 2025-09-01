@@ -147,6 +147,7 @@ function updateClock() {
     });
     
     const messageText = document.getElementById('messageText');
+    const messageTextClone = document.getElementById('messageTextClone');
     const timeHeader = document.getElementById('timeHeader');
     const promoLinks = document.getElementById('promoLinks');
     if (messageText && timeHeader) {
@@ -154,12 +155,14 @@ function updateClock() {
             const { headerHtml, bodyHtml, promoHtml } = formatTelegramMessage(appState.clockData.content);
             timeHeader.innerHTML = headerHtml;
             messageText.innerHTML = bodyHtml || '';
+            if (messageTextClone) messageTextClone.innerHTML = bodyHtml || '';
             if (promoLinks) promoLinks.innerHTML = promoHtml || '';
         } else {
             timeHeader.innerHTML = '';
             messageText.textContent = appState.isConnected ?
                 'Сообщение не найдено' :
                 'Нет подключения к серверу';
+            if (messageTextClone) messageTextClone.innerHTML = '';
             if (promoLinks) promoLinks.innerHTML = '';
         }
     }
