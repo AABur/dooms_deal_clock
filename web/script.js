@@ -354,7 +354,7 @@ function startMarquee() {
     }
 
     // Настраиваем CSS-переменную и длительность анимации
-    const speed = marqueeState.speed || 30; // px/s
+    const speed = 120; // px/s (faster to ensure visible scrolling)
     const durationSec = Math.max(1, contentH / speed);
     wrapper.style.setProperty('--scroll-distance', `${contentH}px`);
     // Перезапуск анимации (сброс)
