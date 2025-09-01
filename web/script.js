@@ -325,6 +325,7 @@ window.updateClock = updateClock;
 
 /**
  * Compute heights and start/stop continuous marquee scrolling
+ * Uses CSS animation with dynamic duration and distance.
  */
 function startMarquee() {
     const leftCol = document.querySelector('.telegram-image');
@@ -343,26 +344,22 @@ function startMarquee() {
     const viewH = Math.max(0, leftH - headerH);
     container.style.height = `${viewH}px`;
 
-    // Measure content height
+    // Measure content height of first block
     const contentH = first.scrollHeight;
+    // If контент короткий — выключаем анимацию
     if (contentH <= viewH) {
-        // No need to scroll
-        if (marqueeState.rafId) cancelAnimationFrame(marqueeState.rafId);
+        wrapper.style.animation = 'none';
         wrapper.style.transform = 'translateY(0)';
-        marqueeState.rafId = null;
         return;
     }
 
-    // Start rAF loop
-    if (marqueeState.rafId) cancelAnimationFrame(marqueeState.rafId);
-    marqueeState.offset = 0;
-    let lastTs = performance.now();
-    function step(ts) {
-        const dt = (ts - lastTs) / 1000; lastTs = ts;
-        marqueeState.offset += marqueeState.speed * dt;
-        if (marqueeState.offset >= contentH) marqueeState.offset -= contentH;
-        wrapper.style.transform = `translateY(-${marqueeState.offset}px)`;
-        marqueeState.rafId = requestAnimationFrame(step);
-    }
-    marqueeState.rafId = requestAnimationFrame(step);
+    // Настраиваем CSS-переменную и длительность анимации
+    const speed = marqueeState.speed || 30; // px/s
+    const durationSec = Math.max(1, contentH / speed);
+    wrapper.style.setProperty('--scroll-distance', `${contentH}px`);
+    wrapper.style.animationName = 'scrollContinuous';
+    wrapper.style.animationTimingFunction = 'linear';
+    wrapper.style.animationIterationCount = 'infinite';
+    wrapper.style.animationDuration = `${durationSec}s`;
+    wrapper.style.transform = 'translateY(0)';
 }

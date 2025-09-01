@@ -94,13 +94,19 @@ body {
     display: flex;
     flex-direction: column;
     will-change: transform;
+    animation-name: scrollContinuous;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
 }
 
 .message-text {
     overflow: hidden;
 }
 
-/* JS drives marquee transform; no CSS keyframes here */
+@keyframes scrollContinuous {
+    from { transform: translateY(0); }
+    to { transform: translateY(calc(-1 * var(--scroll-distance, 0px))); }
+}
 
 .message-text {
     color: #ffffff;
