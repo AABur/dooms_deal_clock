@@ -87,32 +87,53 @@ function formatTelegramMessage(content) {
  */
 function extractPromoLinks(text) {
     let cleaned = text.trimEnd();
-    let html = '';
+    const htmlParts = [];
 
-    // Variant B: three sentences with parenthetical URLs
-    const reThree = /Свежий\s+договорняковый\s+дайджест\.\s*\((https?:\/\/[^\s)]+)\)\s*Поддержать\s+проект\.\s*\((https?:\/\/[^\s)]+)\)\s*Часы\s+судного\s+договорняка\.\s*\((https?:\/\/[^\s)]+)\)\s*$/ims;
-    const mThree = cleaned.match(reThree);
-    if (mThree) {
-        cleaned = cleaned.replace(reThree, '').trimEnd();
-        const [_, digestUrl, supportUrl, clockUrl] = mThree;
-        html = [
+    // Match three links variant with Markdown [text](url) at the very end
+    const reThreeMd = /\[\s*Свежий[^\]]*\]\((https?:\/\/[^)]+)\)\s*[\.!\s]*\[\s*Поддержать[^\]]*\]\((https?:\/\/[^)]+)\)\s*[\.!\s]*\[\s*Часы[^\]]*\]\((https?:\/\/[^)]+)\)\s*$/ims;
+    let m = cleaned.match(reThreeMd);
+    if (m) {
+        cleaned = cleaned.replace(reThreeMd, '').trimEnd();
+        const [, digestUrl, supportUrl, clockUrl] = m;
+        htmlParts.push(
             `<div><a href="${digestUrl}" target="_blank" rel="noopener">Свежий договорняковый дайджест</a>.</div>`,
             `<div><a href="${supportUrl}" target="_blank" rel="noopener">Поддержать проект</a>.</div>`,
             `<div><a href="${clockUrl}" target="_blank" rel="noopener">Часы судного договорняка</a>.</div>`
-        ].join('');
-        return { cleaned, html };
+        );
+    } else {
+        // Match three links variant with plain text + (url)
+        const reThree = /Свежий\s+договорняковый\s+дайджест\.\s*\((https?:\/\/[^\s)]+)\)\s*Поддержать\s+проект\.\s*\((https?:\/\/[^\s)]+)\)\s*Часы\s+судного\s+договорняка\.\s*\((https?:\/\/[^\s)]+)\)\s*$/ims;
+        m = cleaned.match(reThree);
+        if (m) {
+            cleaned = cleaned.replace(reThree, '').trimEnd();
+            const [, digestUrl, supportUrl, clockUrl] = m;
+            htmlParts.push(
+                `<div><a href="${digestUrl}" target="_blank" rel="noopener">Свежий договорняковый дайджест</a>.</div>`,
+                `<div><a href="${supportUrl}" target="_blank" rel="noopener">Поддержать проект</a>.</div>`,
+                `<div><a href="${clockUrl}" target="_blank" rel="noopener">Часы судного договорняка</a>.</div>`
+            );
+        }
     }
 
-    // Variant A: single line about digest
-    const reDigest = /Другие\s+новости\s+за\s+последние\s+дни\s+читайте\s+в\s+нашем\s+дайджесте\s*\((https?:\/\/[^\s)]+)\)\.?\s*$/ims;
-    const mDigest = cleaned.match(reDigest);
-    if (mDigest) {
-        cleaned = cleaned.replace(reDigest, '').trimEnd();
-        const digestUrl = mDigest[1];
-        html = `<div><a href="${digestUrl}" target="_blank" rel="noopener">Другие новости за последние дни — дайджест</a></div>`;
+    // Match single digest line with Markdown link at the end
+    const reDigestMd = /Другие\s+новости[\s\S]*?\[[^\]]*дайджест[^\]]*\]\((https?:\/\/[^)]+)\)\.?\s*$/ims;
+    m = cleaned.match(reDigestMd);
+    if (m) {
+        cleaned = cleaned.replace(reDigestMd, '').trimEnd();
+        const digestUrl = m[1];
+        htmlParts.push(`<div><a href="${digestUrl}" target="_blank" rel="noopener">Другие новости за последние дни — дайджест</a></div>`);
+    } else {
+        // Match single digest line with plain text + (url)
+        const reDigest = /Другие\s+новости\s+за\s+последние\s+дни\s+читайте\s+в\s+нашем\s+дайджесте\s*\((https?:\/\/[^\s)]+)\)\.?\s*$/ims;
+        m = cleaned.match(reDigest);
+        if (m) {
+            cleaned = cleaned.replace(reDigest, '').trimEnd();
+            const digestUrl = m[1];
+            htmlParts.push(`<div><a href="${digestUrl}" target="_blank" rel="noopener">Другие новости за последние дни — дайджест</a></div>`);
+        }
     }
 
-    return { cleaned, html };
+    return { cleaned, html: htmlParts.join('') };
 }
 
 /**

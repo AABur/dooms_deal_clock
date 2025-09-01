@@ -66,7 +66,8 @@ body {
     flex: 0 0 520px;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* align image top to match header top */
+    align-items: flex-start; /* align left edges */
+    flex-direction: column; /* stack image and links vertically */
     min-height: 520px;
     padding-right: 26px;
 }
