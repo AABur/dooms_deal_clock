@@ -160,3 +160,18 @@ def test_get_recent_updates(clock_service, test_db_session):
     assert recent[0].message_id == 5  # Most recent first
     assert recent[1].message_id == 4
     assert recent[2].message_id == 3
+
+
+def test_get_updates_count(clock_service, test_db_session):
+    """Проверка, что get_updates_count возвращает общее число записей."""
+    # Arrange: добавить N записей
+    for i in range(1, 6):
+        update = ClockUpdate(message_id=1000 + i, content=f"Update {i}", time_value=None)
+        test_db_session.add(update)
+    test_db_session.commit()
+
+    # Act
+    total = clock_service.get_updates_count(test_db_session)
+
+    # Assert
+    assert total == 5
