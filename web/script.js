@@ -87,53 +87,91 @@ function formatTelegramMessage(content) {
  */
 function extractPromoLinks(text) {
     let cleaned = text.trimEnd();
-    const htmlParts = [];
 
-    // Match three links variant with Markdown [text](url) at the very end
+    // Helper SVG icons (white, 18x18)
+    const iconTelegram = () => (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
+        + '<path d="M9.04 15.314 8.9 19.36c.454 0 .65-.195.885-.43l2.125-2.05 4.41 3.23c.81.446 1.386.212 1.61-.75l2.915-13.66.001-.001c.259-1.208-.437-1.68-1.225-1.387L2.64 9.28c-1.18.458-1.162 1.116-.2 1.416l4.9 1.528 11.38-7.18c.534-.324 1.02-.144.62.18"/>'
+        + '</svg>'
+    );
+    const iconDoc = () => (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
+        + '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm0 0v6h6"/>'
+        + '<path d="M8 13h8M8 17h5M8 9h2" stroke="currentColor" stroke-width="2" fill="none"/>'
+        + '</svg>'
+    );
+    const iconSupport = () => (
+        '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">'
+        + '<path d="M12.1 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.54 0 3.04.99 3.57 2.36h.87C11.96 4.99 13.46 4 15 4 17.5 4 19.5 6 19.5 8.5c0 3.78-3.4 6.86-8.55 11.54z"/>'
+        + '</svg>'
+    );
+
+    // Storage for extracted URLs
+    let urls = { clock: null, digest: null, support: null };
+
+    // 1) Three-markdown-links footer
     const reThreeMd = /\[\s*Свежий[^\]]*\]\((https?:\/\/[^)]+)\)\s*[\.!\s]*\[\s*Поддержать[^\]]*\]\((https?:\/\/[^)]+)\)\s*[\.!\s]*\[\s*Часы[^\]]*\]\((https?:\/\/[^)]+)\)\s*$/ims;
     let m = cleaned.match(reThreeMd);
     if (m) {
         cleaned = cleaned.replace(reThreeMd, '').trimEnd();
         const [, digestUrl, supportUrl, clockUrl] = m;
-        htmlParts.push(
-            `<div><a href="${digestUrl}" target="_blank" rel="noopener">Свежий договорняковый дайджест</a>.</div>`,
-            `<div><a href="${supportUrl}" target="_blank" rel="noopener">Поддержать проект</a>.</div>`,
-            `<div><a href="${clockUrl}" target="_blank" rel="noopener">Часы судного договорняка</a>.</div>`
-        );
+        urls = { clock: clockUrl, digest: digestUrl, support: supportUrl };
     } else {
-        // Match three links variant with plain text + (url)
+        // 2) Three plain-text links footer
         const reThree = /Свежий\s+договорняковый\s+дайджест\.\s*\((https?:\/\/[^\s)]+)\)\s*Поддержать\s+проект\.\s*\((https?:\/\/[^\s)]+)\)\s*Часы\s+судного\s+договорняка\.\s*\((https?:\/\/[^\s)]+)\)\s*$/ims;
         m = cleaned.match(reThree);
         if (m) {
             cleaned = cleaned.replace(reThree, '').trimEnd();
             const [, digestUrl, supportUrl, clockUrl] = m;
-            htmlParts.push(
-                `<div><a href="${digestUrl}" target="_blank" rel="noopener">Свежий договорняковый дайджест</a>.</div>`,
-                `<div><a href="${supportUrl}" target="_blank" rel="noopener">Поддержать проект</a>.</div>`,
-                `<div><a href="${clockUrl}" target="_blank" rel="noopener">Часы судного договорняка</a>.</div>`
-            );
+            urls = { clock: clockUrl, digest: digestUrl, support: supportUrl };
         }
     }
 
-    // Match single digest line with Markdown link at the end
-    const reDigestMd = /Другие\s+новости[\s\S]*?\[[^\]]*дайджест[^\]]*\]\((https?:\/\/[^)]+)\)\.?\s*$/ims;
-    m = cleaned.match(reDigestMd);
-    if (m) {
-        cleaned = cleaned.replace(reDigestMd, '').trimEnd();
-        const digestUrl = m[1];
-        htmlParts.push(`<div><a href="${digestUrl}" target="_blank" rel="noopener">Другие новости за последние дни — дайджест</a></div>`);
-    } else {
-        // Match single digest line with plain text + (url)
-        const reDigest = /Другие\s+новости\s+за\s+последние\s+дни\s+читайте\s+в\s+нашем\s+дайджесте\s*\((https?:\/\/[^\s)]+)\)\.?\s*$/ims;
-        m = cleaned.match(reDigest);
+    // 3) Single digest line (keep as fallback item)
+    if (!urls.digest) {
+        const reDigestMd = /Другие\s+новости[\s\S]*?\[[^\]]*дайджест[^\]]*\]\((https?:\/\/[^)]+)\)\.?\s*$/ims;
+        m = cleaned.match(reDigestMd);
         if (m) {
-            cleaned = cleaned.replace(reDigest, '').trimEnd();
-            const digestUrl = m[1];
-            htmlParts.push(`<div><a href="${digestUrl}" target="_blank" rel="noopener">Другие новости за последние дни — дайджест</a></div>`);
+            cleaned = cleaned.replace(reDigestMd, '').trimEnd();
+            urls.digest = m[1];
+        } else {
+            const reDigest = /Другие\s+новости\s+за\s+последние\s+дни\s+читайте\s+в\s+нашем\s+дайджесте\s*\((https?:\/\/[^\s)]+)\)\.?\s*$/ims;
+            m = cleaned.match(reDigest);
+            if (m) {
+                cleaned = cleaned.replace(reDigest, '').trimEnd();
+                urls.digest = m[1];
+            }
         }
     }
 
-    return { cleaned, html: htmlParts.join('') };
+    // Compose HTML in desired order: Clock → Digest → Support
+    const parts = [];
+    if (urls.clock) {
+        parts.push(
+            `<div class="promo-item">`
+            + `<span class="promo-icon">${iconTelegram()}</span>`
+            + `<a href="${urls.clock}" target="_blank" rel="noopener">Часы судного договорняка</a>`
+            + `</div>`
+        );
+    }
+    if (urls.digest) {
+        parts.push(
+            `<div class="promo-item">`
+            + `<span class="promo-icon">${iconDoc()}</span>`
+            + `<a href="${urls.digest}" target="_blank" rel="noopener">Свежий договорняковый дайджест</a>`
+            + `</div>`
+        );
+    }
+    if (urls.support) {
+        parts.push(
+            `<div class="promo-item">`
+            + `<span class="promo-icon">${iconSupport()}</span>`
+            + `<a href="${urls.support}" target="_blank" rel="noopener">Поддержать проект</a>`
+            + `</div>`
+        );
+    }
+
+    return { cleaned, html: parts.join('') };
 }
 
 /**

@@ -152,6 +152,28 @@ make check         # Run all checks (format, lint, type check)
 make clean         # Clean temporary files
 ```
 
+### UI (End-to-End) Tests
+
+UI tests use Playwright (Chromium) to validate the page layout and behavior (static header, continuous scrolling text, promo links under image).
+
+Install once:
+
+```
+make init-dev
+uv run pip install pytest-playwright
+uv run playwright install chromium
+```
+
+Run only UI tests:
+
+```
+uv run pytest -m ui tests/ui -q
+```
+
+Notes:
+- Tests start the FastAPI app on a random local port and mock the backend to provide deterministic content (no external network).
+- Scrolling test asserts that the `.marquee` animation is active and changes transform over time.
+
 ### Frontend Development
 
 The frontend uses vanilla JavaScript with automatic API polling:

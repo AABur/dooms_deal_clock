@@ -30,6 +30,7 @@ dev = [
     "httpx>=0.25.2",
     "ruff>=0.11.2",
     "wemake-python-styleguide>=1.1.0",
+    "pytest-playwright>=0.6.2",
 ]
 
 [build-system]
@@ -79,6 +80,7 @@ markers = [
     "integration: marks tests as integration tests (deselect with '-m \"not integration\"')",
     "unit: marks tests as unit tests",
     "smoke: marks tests as smoke tests for quick validation",
+    "ui: marks end-to-end UI tests (Playwright)",
 ]
 
 # Cache setup for improved test performance

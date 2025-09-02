@@ -120,6 +120,9 @@ js-check: ## Check JavaScript formatting and linting
 
 # Run all checks (format, lint, type check)
 check: format lint mypy js-check ## Run all checks (format, lint, type check, JS)
+ 
+ui-tests: ## Run only UI (Playwright) tests
+	uv run pytest -m ui tests/ui -q
 
 # Docker targets
 docker-dev: ## Start development Docker environment
