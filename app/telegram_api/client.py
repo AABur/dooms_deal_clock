@@ -23,7 +23,16 @@ class TelegramService:
     def _get_client(self) -> TelegramClient:
         """Get or create Telegram client."""
         if self.client is None:
-            self.client = TelegramClient("dooms_deal_session", config.TELEGRAM_API_ID, config.TELEGRAM_API_HASH)
+            # Telethon expects api_id as an integer. Cast safely for real runs,
+            # but keep tests tolerant if a non-numeric stub is injected.
+            api_id_cfg = config.TELEGRAM_API_ID
+            api_id: Optional[int | str]
+            try:
+                api_id = int(api_id_cfg) if api_id_cfg is not None else None
+            except (TypeError, ValueError):
+                # Fall back to original (useful in tests where a stub like "id" is set)
+                api_id = api_id_cfg  # type: ignore[assignment]
+            self.client = TelegramClient("dooms_deal_session", api_id, config.TELEGRAM_API_HASH)
         return self.client
 
     async def connect(self) -> None:

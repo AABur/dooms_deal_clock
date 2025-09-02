@@ -26,7 +26,7 @@ class Config:
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./clock_data.db")
 
     # Update configuration
-    UPDATE_INTERVAL_SECONDS: int = int(os.getenv("UPDATE_INTERVAL_SECONDS", "300"))
+    UPDATE_INTERVAL_SECONDS: int = int(os.getenv("UPDATE_INTERVAL_SECONDS", "120"))
 
     # Logging configuration
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")

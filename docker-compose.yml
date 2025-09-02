@@ -22,7 +22,7 @@ services:
       - DATABASE_URL=sqlite:///./data/clock_data.db
       
       # Update configuration
-      - UPDATE_INTERVAL_SECONDS=${UPDATE_INTERVAL_SECONDS:-300}
+      - UPDATE_INTERVAL_SECONDS=${UPDATE_INTERVAL_SECONDS:-120}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
     
     ports:
