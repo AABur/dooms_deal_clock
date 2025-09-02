@@ -21,11 +21,13 @@ def test_promo_links_clickable_open_in_new_tab(serve_app):
         with sync_playwright() as p:
             browser = p.chromium.launch()
             page = browser.new_page()
-            # Block external network to avoid navigation
-            page.route("**/*", lambda route: route.abort())
 
+            # Сначала загружаем локальную страницу, затем блокируем внешнюю сеть
             page.goto(f"http://127.0.0.1:{port}/static/index.html")
             page.wait_for_selector("#promoLinks a")
+
+            # Блокируем внешние переходы после загрузки локальной страницы
+            page.route("**/*", lambda route: route.abort())
 
             links = page.query_selector_all("#promoLinks a")
             assert len(links) >= 3
@@ -46,4 +48,3 @@ def test_promo_links_clickable_open_in_new_tab(serve_app):
                 popup.close()
 
             browser.close()
-
