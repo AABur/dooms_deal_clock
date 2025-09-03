@@ -43,7 +43,7 @@ def test_db_engine(tmp_path_factory):
 def test_db_session(test_db_engine) -> Generator[Session, None, None]:
     """Create a fresh test DB schema and session per test."""
     # Use the application's models metadata to ensure schema matches (including image_data)
-    from app.models import Base
+    from app.utils.db import Base
 
     Base.metadata.create_all(bind=test_db_engine)
     TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_db_engine)
@@ -85,7 +85,7 @@ def test_client(test_db_session, mocker):
     try:
         from sqlalchemy.orm import sessionmaker as _sessionmaker
 
-        import app.models as models_module
+        import app.utils.db as models_module
 
         models_module.engine = test_db_session.bind
         models_module.SessionLocal = _sessionmaker(autocommit=False, autoflush=False, bind=test_db_session.bind)
@@ -95,7 +95,7 @@ def test_client(test_db_session, mocker):
 
     # Now import after environment is mocked
     import app.main as app_main
-    import app.models as models_module
+    import app.utils.db as models_module
     from app.main import app
 
     # Override the get_db dependency to use the shared test session
@@ -126,7 +126,7 @@ def test_clock_update_model(test_db_session, mocker):
         clear=False,
     )
 
-    from app.models import ClockUpdate
+    from app.utils.db import ClockUpdate
 
     return ClockUpdate
 

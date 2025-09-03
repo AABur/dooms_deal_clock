@@ -5,7 +5,7 @@ import asyncio
 from loguru import logger
 
 from app.config import config
-from app.models import SessionLocal
+from app.utils.db import SessionLocal
 from app.services.clock_service import ClockService
 
 

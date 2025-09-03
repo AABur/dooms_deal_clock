@@ -10,7 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.models import ClockUpdate, create_tables, get_db
+from app.utils.db import ClockUpdate, create_tables, get_db
 from app.services.clock_service import ClockService
 from app.utils.logging import setup_logging
 

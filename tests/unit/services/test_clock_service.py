@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from app.models import ClockUpdate
+from app.utils.db import ClockUpdate
 from app.services.clock_service import ClockService
 
 

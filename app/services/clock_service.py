@@ -6,7 +6,7 @@ from typing import List, Optional
 from loguru import logger
 from sqlalchemy.orm import Session
 
-from app.models import ClockUpdate
+from app.utils.db import ClockUpdate
 from app.telegram_api.client import TelegramService
 
 

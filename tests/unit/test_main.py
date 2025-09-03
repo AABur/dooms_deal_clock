@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from app.models import ClockUpdate
+from app.utils.db import ClockUpdate
 
 
 def _add_update(
@@ -142,4 +142,3 @@ async def test_reload_endpoint_error_returns_500(test_client, monkeypatch):
 
     resp = test_client.post("/api/clock/reload/123")
     assert resp.status_code == 500
-

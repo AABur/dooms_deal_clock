@@ -1,10 +1,10 @@
-"""Unit tests for app/models.py."""
+"""Unit tests for app/utils/db.py."""
 
 
 def test_create_tables_function_calls_metadata(mocker):
-    from app.models import create_tables
+    from app.utils.db import create_tables
 
-    mock_base = mocker.patch("app.models.Base")
+    mock_base = mocker.patch("app.utils.db.Base")
     mock_metadata = mocker.MagicMock()
     mock_base.metadata = mock_metadata
 
@@ -13,9 +13,9 @@ def test_create_tables_function_calls_metadata(mocker):
 
 
 def test_get_db_function_workflow(mocker):
-    from app.models import get_db
+    from app.utils.db import get_db
 
-    mock_session_local = mocker.patch("app.models.SessionLocal")
+    mock_session_local = mocker.patch("app.utils.db.SessionLocal")
     mock_session = mocker.MagicMock()
     mock_session_local.return_value = mock_session
 
@@ -31,7 +31,7 @@ def test_get_db_function_workflow(mocker):
 
 
 def test_clock_update_repr_method_direct():
-    from app.models import ClockUpdate
+    from app.utils.db import ClockUpdate
 
     update = ClockUpdate()
     update.id = 42  # type: ignore[assignment]
@@ -43,7 +43,7 @@ def test_clock_update_repr_method_direct():
 
 
 def test_models_module_imports():
-    from app.models import Base, ClockUpdate, SessionLocal, create_tables, engine, get_db
+    from app.utils.db import Base, ClockUpdate, SessionLocal, create_tables, engine, get_db
 
     assert Base is not None
     assert ClockUpdate is not None
@@ -54,30 +54,29 @@ def test_models_module_imports():
 
 
 def test_clock_update_table_name():
-    from app.models import ClockUpdate
+    from app.utils.db import ClockUpdate
 
     assert ClockUpdate.__tablename__ == "clock_updates"
 
 
 def test_session_local_is_callable():
-    from app.models import SessionLocal
+    from app.utils.db import SessionLocal
 
     assert callable(SessionLocal)
 
 
 def test_engine_has_basic_methods():
-    from app.models import engine
+    from app.utils.db import engine
 
     assert hasattr(engine, "connect")
     assert hasattr(engine, "url")
 
 
 def test_models_uses_config(mocker):
-    mock_config = mocker.patch("app.models.config")
+    mock_config = mocker.patch("app.utils.db.config")
     mock_config.DATABASE_URL = "sqlite:///test.db"
     mock_config.DEBUG = False
 
-    import app.models as models_module
+    import app.utils.db as models_module
 
     assert models_module.config == mock_config
-
