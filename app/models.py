@@ -1,19 +1,14 @@
-"""Database models for the Dooms Deal Clock application.
-
-Modern layout: Base and DB session live in `app.db`, this module declares
-SQLAlchemy models and re-exports `engine`, `SessionLocal`, `create_tables`,
-and `get_db` for backwards compatibility.
-"""
+"""Database models for the Dooms Deal Clock application."""
 
 from typing import Generator
 
-from sqlalchemy import Column, DateTime, Integer, String, Text
-from sqlalchemy.orm import Session
+from sqlalchemy import Column, DateTime, Integer, String, Text, create_engine
+from sqlalchemy.orm import Session, declarative_base, sessionmaker
 from sqlalchemy.sql import func
 
-from app.db.base import Base
-from app.db.session import SessionLocal as _SessionLocal
-from app.db.session import engine as _engine
+from app.config import config
+
+Base = declarative_base()
 
 
 class ClockUpdate(Base):  # type: ignore[misc, valid-type]
@@ -33,9 +28,9 @@ class ClockUpdate(Base):  # type: ignore[misc, valid-type]
         return f"<ClockUpdate(id={self.id}, time_value='{self.time_value}')>"
 
 
-# Re-export engine and SessionLocal to keep existing imports working
-engine = _engine
-SessionLocal = _SessionLocal
+# Create database engine and session
+engine = create_engine(config.DATABASE_URL, echo=config.DEBUG)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def create_tables() -> None:
