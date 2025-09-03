@@ -37,7 +37,7 @@ make docker-auth
 Проверить, что авторизовано:
 
 ```
-make docker-status
+make tg-status
 # или: docker compose run --rm dooms-deal-clock python scripts/telegram_status.py
 ```
 

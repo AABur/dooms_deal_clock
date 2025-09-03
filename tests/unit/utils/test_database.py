@@ -1,8 +1,12 @@
-"""Tests for utils/database.py module (pytest-mock, functions only)."""
+"""Tests for DB session utilities (`app.db.*`) and model presence.
+
+Modernized to reflect the current project layout.
+"""
 
 import pytest
 
-from app.utils.database import Base, SessionLocal, engine, get_db
+from app.db.base import Base
+from app.db.session import SessionLocal, engine, get_db
 
 
 def test_get_db_function():
@@ -49,7 +53,7 @@ def test_session_local_configuration():
 
 
 def test_engine_sqlite_config(mocker):
-    mock_create_engine = mocker.patch("app.utils.database.create_engine")
+    mock_create_engine = mocker.patch("app.db.session.create_engine")
     mock_create_engine.return_value = mocker.MagicMock()
 
     connect_args: dict[str, object] = {"check_same_thread": False}
@@ -62,7 +66,7 @@ def test_engine_sqlite_config(mocker):
 
 
 def test_engine_non_sqlite_config(mocker):
-    mock_create_engine = mocker.patch("app.utils.database.create_engine")
+    mock_create_engine = mocker.patch("app.db.session.create_engine")
     mock_create_engine.return_value = mocker.MagicMock()
 
     postgres_url = "postgresql://user:pass@localhost/db"
@@ -76,66 +80,60 @@ def test_engine_non_sqlite_config(mocker):
 
 
 def test_session_local_factory(mocker):
-    mock_sessionmaker = mocker.patch("app.utils.database.sessionmaker")
+    mock_sessionmaker = mocker.patch("app.db.session.sessionmaker")
     mock_session_factory = mocker.MagicMock()
     mock_sessionmaker.return_value = mock_session_factory
 
-    from app.utils.database import engine as _engine
+    from app.db.session import engine as _engine
 
     mock_sessionmaker(autocommit=False, autoflush=False, bind=_engine)
     mock_sessionmaker.assert_called_once_with(autocommit=False, autoflush=False, bind=_engine)
 
 
 def test_models_exist():
-    from app.utils import database
+    # Ensure ClockUpdate model exists in app.models (single source of truth)
+    import app.models as models
 
-    assert hasattr(database, "ClockUpdate")
-    assert hasattr(database, "ParsedMessage")
+    assert hasattr(models, "ClockUpdate")
 
 
 def test_clock_update_model_attributes():
-    from app.utils.database import ClockUpdate
+    from app.models import ClockUpdate
 
     assert ClockUpdate.__tablename__ == "clock_updates"
     columns = [column.name for column in ClockUpdate.__table__.columns]
     expected_columns = [
         "id",
-        "time",
-        "description",
-        "raw_message",
         "message_id",
+        "content",
+        "time_value",
+        "image_data",
         "created_at",
         "updated_at",
-        "is_active",
     ]
     for expected_col in expected_columns:
         assert expected_col in columns, f"Column {expected_col} missing from ClockUpdate"
 
 
-def test_parsed_message_model_attributes():
-    from app.utils.database import ParsedMessage
-
-    assert ParsedMessage.__tablename__ == "parsed_messages"
-    columns = [column.name for column in ParsedMessage.__table__.columns]
-    expected_columns = ["id", "message_id", "raw_text", "parsed_successfully", "error_message", "processed_at"]
-    for expected_col in expected_columns:
-        assert expected_col in columns, f"Column {expected_col} missing from ParsedMessage"
+def test_no_legacy_parsed_message_model():
+    # Legacy ParsedMessage should not exist anymore
+    import app.models as models
+    assert not hasattr(models, "ParsedMessage")
 
 
 def test_models_inherit_from_base():
-    from app.utils.database import Base as _Base
-    from app.utils.database import ClockUpdate, ParsedMessage
+    from app.db.base import Base as _Base
+    from app.models import ClockUpdate
 
     assert issubclass(ClockUpdate, _Base)
-    assert issubclass(ParsedMessage, _Base)
 
 
 def test_table_creation_called(mocker):
-    mock_base = mocker.patch("app.utils.database.Base")
+    mock_base = mocker.patch("app.db.session.Base")
     mock_metadata = mocker.MagicMock()
     mock_base.metadata = mock_metadata
 
-    from app.utils.database import create_tables
+    from app.db.session import create_tables
 
     create_tables()
     mock_metadata.create_all.assert_called_once()

@@ -235,7 +235,7 @@ make docker-auth
 Check status:
 
 ```
-make docker-status
+make tg-status
 # or: docker compose run --rm dooms-deal-clock python scripts/telegram_status.py
 ```
 
