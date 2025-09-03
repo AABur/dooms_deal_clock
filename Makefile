@@ -1,4 +1,4 @@
-.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean js-lint js-format js-check docker-dev docker-build docker-logs docker-status docker-stop docker-clean
+.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean js-lint js-format js-check docker-dev docker-build docker-logs docker-status docker-stop docker-clean tg-status docker-db-reset docker-fetch
 .DEFAULT_GOAL := help
 
 # Default Python command using uv
@@ -130,10 +130,10 @@ docker-dev: ## Start development Docker environment
 	@docker compose up -d
 
 docker-auth: ## Run interactive Telegram auth inside container (creates data/dooms_deal_session.session)
-    @docker compose run --rm dooms-deal-clock python scripts/telegram_auth.py
+	@docker compose run --rm dooms-deal-clock python scripts/telegram_auth.py
 
 tg-status: ## Show Telegram authorization status (inside container)
-    @docker compose run --rm dooms-deal-clock python scripts/telegram_status.py
+	@docker compose run --rm dooms-deal-clock python scripts/telegram_status.py
 
 docker-build: ## Build Docker image
 	@echo "Building Docker image..."
@@ -143,15 +143,15 @@ docker-logs: ## Show Docker container logs
 	@docker compose logs -f
 
 docker-status: ## Show Docker containers status
-    @docker compose ps
+	@docker compose ps
 
 docker-db-reset: ## Drop DB file in volume and restart backend (then run `make docker-fetch`)
-    @docker compose stop dooms-deal-clock
-    @docker compose run --rm dooms-deal-clock sh -lc 'rm -f data/clock_data.db || true'
-    @docker compose up -d dooms-deal-clock
+	@docker compose stop dooms-deal-clock
+	@docker compose run --rm dooms-deal-clock sh -lc 'rm -f data/clock_data.db || true'
+	@docker compose up -d dooms-deal-clock
 
 docker-fetch: ## Trigger manual fetch via API (requires backend up)
-    @curl -sS -X POST http://localhost:8000/api/clock/fetch || true && echo
+	@curl -sS -X POST http://localhost:8000/api/clock/fetch || true && echo
 
 docker-stop: ## Stop Docker containers
 	@echo "Stopping Docker containers..."

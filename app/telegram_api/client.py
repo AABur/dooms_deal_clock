@@ -33,8 +33,13 @@ class TelegramService:
             except (TypeError, ValueError):
                 # Fall back to original (useful in tests where a stub like "id" is set)
                 api_id = api_id_cfg  # type: ignore[assignment]
-            # Store session inside data/ to persist in Docker volume
-            session_path = os.path.join("data", "dooms_deal_session")
+            # Allow overriding session directory via env to persist in Docker volume.
+            # Default keeps original name for tests/local runs.
+            session_dir = os.getenv("TELEGRAM_SESSION_DIR")
+            session_name = "dooms_deal_session"
+            session_path = (
+                os.path.join(session_dir, session_name) if session_dir else session_name
+            )
             self.client = TelegramClient(session_path, api_id, config.TELEGRAM_API_HASH)
         return self.client
 
@@ -45,11 +50,26 @@ class TelegramService:
             password: Optional 2FA password. If not provided, uses value from config.
         """
         client = self._get_client()
+        kwargs: Dict[str, Any] = {"phone": config.TELEGRAM_PHONE}
         pw = password if password not in (None, "") else config.TELEGRAM_2FA_PASSWORD
-        await client.start(phone=config.TELEGRAM_PHONE, password=pw)
+        if pw:
+            try:
+                import inspect
+
+                if "password" in inspect.signature(client.start).parameters:
+                    kwargs["password"] = pw
+            except Exception:
+                # If inspection fails, fall back to not passing password to keep compatibility in tests
+                pass
+        await client.start(**kwargs)
         # Tighten permissions on session file if present
         try:
-            sess_file = os.path.join("data", "dooms_deal_session.session")
+            session_dir = os.getenv("TELEGRAM_SESSION_DIR")
+            sess_file = (
+                os.path.join(session_dir, "dooms_deal_session.session")
+                if session_dir
+                else "dooms_deal_session.session"
+            )
             if os.path.exists(sess_file):
                 os.chmod(sess_file, 0o600)
         except Exception as _perm_err:  # pragma: no cover - best effort
