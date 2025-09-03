@@ -223,6 +223,24 @@ docker compose logs -f
 - **Frontend**: Served via Nginx on port 80
 - **Database**: SQLite file in `data/` directory
 
+### Telegram Authorization in Docker
+
+For first-time authorization of the Telegram client inside Docker (session persisted in `data/`):
+
+```
+make docker-auth
+# or: docker compose run --rm dooms-deal-clock python scripts/telegram_auth.py
+```
+
+Check status:
+
+```
+make docker-status
+# or: docker compose run --rm dooms-deal-clock python scripts/telegram_status.py
+```
+
+More details in `docs/DOCKER_AUTH.md`.
+
 ## Visual Design
 
 The application replicates the exact visual design from the Telegram channel:

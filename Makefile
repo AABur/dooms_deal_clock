@@ -129,6 +129,12 @@ docker-dev: ## Start development Docker environment
 	@echo "Starting development Docker environment..."
 	@docker compose up -d
 
+docker-auth: ## Run interactive Telegram auth inside container (creates data/dooms_deal_session.session)
+	@docker compose run --rm dooms-deal-clock python scripts/telegram_auth.py
+
+docker-status: ## Show Telegram authorization status
+	@docker compose run --rm dooms-deal-clock python scripts/telegram_status.py
+
 docker-build: ## Build Docker image
 	@echo "Building Docker image..."
 	@docker compose build

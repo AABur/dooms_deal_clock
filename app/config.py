@@ -15,6 +15,7 @@ class Config:
     TELEGRAM_API_ID: Optional[str] = os.getenv("TELEGRAM_API_ID")
     TELEGRAM_API_HASH: Optional[str] = os.getenv("TELEGRAM_API_HASH")
     TELEGRAM_PHONE: Optional[str] = os.getenv("TELEGRAM_PHONE")
+    TELEGRAM_2FA_PASSWORD: Optional[str] = os.getenv("TELEGRAM_2FA_PASSWORD")
     TELEGRAM_CHANNEL_USERNAME: str = os.getenv("TELEGRAM_CHANNEL_USERNAME", "dooms_deal_clock")
 
     # API configuration

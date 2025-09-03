@@ -2,6 +2,7 @@
 
 import base64
 import io
+import os
 import re
 from typing import Any, Dict, List, Optional
 
@@ -32,13 +33,27 @@ class TelegramService:
             except (TypeError, ValueError):
                 # Fall back to original (useful in tests where a stub like "id" is set)
                 api_id = api_id_cfg  # type: ignore[assignment]
-            self.client = TelegramClient("dooms_deal_session", api_id, config.TELEGRAM_API_HASH)
+            # Store session inside data/ to persist in Docker volume
+            session_path = os.path.join("data", "dooms_deal_session")
+            self.client = TelegramClient(session_path, api_id, config.TELEGRAM_API_HASH)
         return self.client
 
-    async def connect(self) -> None:
-        """Connect to Telegram and authenticate."""
+    async def connect(self, password: Optional[str] = None) -> None:
+        """Connect to Telegram and authenticate.
+
+        Args:
+            password: Optional 2FA password. If not provided, uses value from config.
+        """
         client = self._get_client()
-        await client.start(phone=config.TELEGRAM_PHONE)
+        pw = password if password not in (None, "") else config.TELEGRAM_2FA_PASSWORD
+        await client.start(phone=config.TELEGRAM_PHONE, password=pw)
+        # Tighten permissions on session file if present
+        try:
+            sess_file = os.path.join("data", "dooms_deal_session.session")
+            if os.path.exists(sess_file):
+                os.chmod(sess_file, 0o600)
+        except Exception as _perm_err:  # pragma: no cover - best effort
+            logger.warning(f"Could not set permissions on session file: {_perm_err}")
         logger.info("Connected to Telegram API")
 
     async def disconnect(self) -> None:
