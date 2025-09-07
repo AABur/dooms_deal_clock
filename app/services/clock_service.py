@@ -1,6 +1,6 @@
 """Service for managing clock updates and database operations."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from loguru import logger
@@ -67,6 +67,63 @@ class ClockService:
         except Exception as e:
             db.rollback()
             logger.error(f"Error fetching and storing updates: {e}")
+            return 0
+        finally:
+            await self.telegram_service.disconnect()
+
+    async def fetch_and_store_since_days(self, db: Session, days: int | None = 30) -> int:
+        """Fetch messages for a period and store updates.
+
+        Args:
+            db: Database session
+            days: Number of days back to fetch. 0 → fetch all messages; default 30.
+
+        Returns:
+            Number of new updates stored
+        """
+        await self.telegram_service.connect()
+        try:
+            # Determine date boundary
+            if days is None:
+                days = 30
+            if days <= 0:
+                min_date = None
+            else:
+                # Use UTC naive to match existing fallback usage
+                min_date = datetime.utcnow() - timedelta(days=days)
+
+            updates_count = 0
+            async for message in self.telegram_service.iter_channel_messages(min_date=min_date):
+                if not getattr(message, "text", None):
+                    continue
+
+                existing = db.query(ClockUpdate).filter(ClockUpdate.message_id == message.id).first()
+                if existing:
+                    continue
+
+                time_value = self.telegram_service.extract_time_from_message(message.text)
+                image_data = await self.telegram_service.get_message_image_data(message)
+
+                clock_update = ClockUpdate(
+                    message_id=message.id,
+                    content=message.text,
+                    time_value=time_value,
+                    image_data=image_data,
+                    created_at=message.date or datetime.utcnow(),
+                )
+                db.add(clock_update)
+                updates_count += 1
+
+                # Periodic lightweight flush to avoid huge transactions
+                if updates_count % 50 == 0:
+                    db.flush()
+
+            db.commit()
+            logger.info(f"Period fetch stored {updates_count} new updates (days={days})")
+            return updates_count
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Error in period fetch: {e}")
             return 0
         finally:
             await self.telegram_service.disconnect()

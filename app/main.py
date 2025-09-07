@@ -6,6 +6,7 @@ from typing import Any, Dict
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -73,6 +74,12 @@ async def root() -> Dict[str, Any]:
         Dict[str, Any]: API status information
     """
     return {"message": "Dooms Deal Clock API", "status": "running"}
+
+
+@app.get("/admin", include_in_schema=False)
+async def admin_page() -> FileResponse:
+    """Serve the simple admin page for manual operations."""
+    return FileResponse("web/admin.html")
 
 
 @app.get("/api/health")
@@ -196,4 +203,39 @@ async def reload_message(message_id: int, db: Session = Depends(get_db)) -> Dict
         }
     except Exception as e:
         logger.error(f"Error reloading message {message_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/api/clock/reset")
+async def reset_database(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Delete all stored clock updates (development/admin convenience)."""
+    try:
+        deleted = db.query(ClockUpdate).count()
+        db.query(ClockUpdate).delete()
+        db.commit()
+        return {"message": f"Cleared {deleted} records", "deleted": deleted}
+    except Exception as e:  # pragma: no cover - simple admin utility
+        db.rollback()
+        logger.error(f"Error resetting database: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/api/clock/fetch-period")
+async def fetch_period(days: int = 30, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """Fetch and store messages for a given period.
+
+    Query params:
+        days: Number of days back to fetch (default 30). Use 0 for all messages.
+    """
+    try:
+        if days is None:
+            days = 30
+        updates_count = await clock_service.fetch_and_store_since_days(db, days=int(days))
+        return {
+            "message": f"Fetched {updates_count} updates for days={days}",
+            "updates_count": updates_count,
+            "days": int(days),
+        }
+    except Exception as e:
+        logger.error(f"Error fetching period days={days}: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e

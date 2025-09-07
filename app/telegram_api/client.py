@@ -4,7 +4,8 @@ import base64
 import io
 import os
 import re
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, AsyncIterator, Dict, List, Optional
 
 from loguru import logger
 from telethon import TelegramClient
@@ -96,6 +97,23 @@ class TelegramService:
         except Exception as e:
             logger.error(f"Error fetching messages: {e}")
             return []
+
+    async def iter_channel_messages(self, min_date: Optional[datetime] = None) -> AsyncIterator[Message]:
+        """Iterate over channel messages optionally filtered by a minimum date.
+
+        Args:
+            min_date: If provided, only messages on/after this date are yielded.
+
+        Yields:
+            Message objects from the channel in reverse chronological order.
+        """
+        try:
+            client = self._get_client()
+            async for message in client.iter_messages(self.channel_username, min_date=min_date):
+                yield message
+        except Exception as e:  # pragma: no cover - simple passthrough iterator
+            logger.error(f"Error iterating messages: {e}")
+            return
 
     async def get_channel_info(self) -> Optional[Dict[str, Any]]:
         """Get information about the channel."""
