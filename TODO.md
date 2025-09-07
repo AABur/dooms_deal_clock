@@ -11,6 +11,10 @@
 - Добавить тест на `ClockService.get_updates_count`.
   - Где: `tests/unit/services/test_clock_service.py`.
   - Сценарий: вставить известное количество записей `ClockUpdate` и проверить возврат метода.
+- Добавить простую аутентификацию для админки и опасных эндпоинтов (token из `.env`).
+  - Где: `app/main.py` (эндпоинты `/api/clock/reset`, `/api/clock/fetch`, `/api/clock/fetch-period`, `/api/clock/reload/*`).
+  - Что: заголовок `X-Admin-Token` или query `token=...`, сравнение с `ADMIN_TOKEN` из `.env`.
+  - UI: добавить поле/локальное хранение токена в `web/admin.html`/`admin.js` и прокидывать его в запросы.
 
 ## P3 — Дополнительно
 
