@@ -203,6 +203,42 @@ body {
     width: 100%;
 }
 
+/* Dates row (top of the page), reuse promo-links font */
+.dates-row {
+    display: flex;
+    justify-content: flex-end; /* right align; newest appears at the far right */
+    align-items: center;
+    gap: 24px; /* bigger interval between dates */
+    white-space: nowrap;
+    overflow: hidden; /* hide older dates on the left if overflow */
+    padding-bottom: 8px;
+}
+
+.dates-row .date-item {
+    color: #cfd6e4;
+    opacity: 0.95;
+    cursor: pointer;
+}
+
+.dates-row .date-item:hover {
+    opacity: 1;
+}
+
+.dates-row .date-item.active {
+    color: #ffffff;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+/* Separator between dates (three dots) */
+.dates-row .date-sep {
+    color: #a8b0bf;
+    opacity: 0.6;
+    pointer-events: none;
+    user-select: none;
+    font-family: 'Montserrat', sans-serif; /* ensure same font as promo-links */
+}
+
 .promo-links a {
     color: #ffffff; /* inherit white color */
     text-decoration: underline; /* keep underline */

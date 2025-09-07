@@ -28,7 +28,11 @@ const appState = {
     isConnected: false,
     lastFetchTime: null,
     retryCount: 0,
-    maxRetries: 3
+    maxRetries: 3,
+    // Index of latest entry per day (YYYY-MM-DD -> history item)
+    dateIndex: {},
+    // Selected date key freezes view; null means live latest
+    selectedDateKey: null,
 };
 
 /**
@@ -312,7 +316,14 @@ async function checkServerStatus() {
  */
 async function autoUpdate() {
     try {
-        await fetchClockData();
+        if (appState.selectedDateKey) {
+            // Keep the selected date view; still refresh dates row quietly
+            await fetchAndRenderDatesRow();
+        } else {
+            await fetchClockData();
+            // Also refresh dates row after data update
+            fetchAndRenderDatesRow().catch(() => {});
+        }
     } catch (error) {
         if (appState.retryCount < appState.maxRetries) {
             console.log(`Повторная попытка ${appState.retryCount}/${appState.maxRetries} через 5 секунд...`);
@@ -354,12 +365,113 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
     const img = document.getElementById('clockImage');
     if (img) img.addEventListener('load', () => startMarquee());
+
+    // Initial dates row render (fire-and-forget)
+    fetchAndRenderDatesRow().catch(() => {});
 });
 
 // Export functions to global window object for debugging and external access
 window.fetchClockData = fetchClockData;
 window.checkServerStatus = checkServerStatus;
 window.updateClock = updateClock;
+window.selectDate = selectDate;
+
+/**
+ * Fetch recent history and render a compact dates row at the top.
+ * Shows unique days for which there are messages containing a time.
+ */
+async function fetchAndRenderDatesRow(limit = 300) {
+    const el = document.getElementById('datesRow');
+    if (!el) return;
+    try {
+        const resp = await fetch(`${API_BASE_URL}/clock/history?limit=${encodeURIComponent(limit)}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(8000),
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        const updates = Array.isArray(data.updates) ? data.updates : [];
+        // Only messages with detected time
+        const withTime = updates.filter(u => !!u.time);
+        // Build index of latest entry per day (updates are desc by created_at)
+        const idx = {};
+        for (const u of withTime) {
+            const key = toDateKey(u.created_at);
+            if (!idx[key]) idx[key] = u; // first occurrence is the latest for that day
+        }
+        appState.dateIndex = idx;
+
+        // Sorted keys oldest -> newest so newest is at right
+        const keys = Object.keys(idx).sort((a, b) => a.localeCompare(b));
+        const sep = '<span class="date-sep">.....</span>';
+        el.innerHTML = keys
+            .map(k => `<span class="date-item" data-key="${k}">${formatDateShort(k)}</span>`)
+            .join(sep);
+
+        // Restore active state if any
+        if (appState.selectedDateKey) {
+            const active = el.querySelector(`[data-key="${appState.selectedDateKey}"]`);
+            if (active) active.classList.add('active');
+        }
+
+        // Attach click handler once
+        if (!el.dataset.bound) {
+            el.addEventListener('click', (ev) => {
+                const t = ev.target;
+                if (!t || !t.classList || !t.classList.contains('date-item')) return;
+                const key = t.getAttribute('data-key');
+                if (!key) return;
+                selectDate(key);
+            });
+            el.dataset.bound = '1';
+        }
+    } catch (_) {
+        // silent
+    }
+}
+
+function toDateKey(iso) {
+    const dt = new Date(iso);
+    const y = dt.getUTCFullYear();
+    const m = String(dt.getUTCMonth() + 1).padStart(2, '0');
+    const d = String(dt.getUTCDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
+function formatDateShort(key) {
+    // key is YYYY-MM-DD
+    const [y, m, d] = key.split('-');
+    return `${d}.${m}`;
+}
+
+function selectDate(key) {
+    const el = document.getElementById('datesRow');
+    if (!el) return;
+    // Toggle off if clicking the same selected date
+    if (appState.selectedDateKey === key) {
+        appState.selectedDateKey = null;
+        const prev = el.querySelector('.date-item.active');
+        if (prev) prev.classList.remove('active');
+        // Back to live latest
+        fetchClockData().catch(() => {});
+        return;
+    }
+    // Update selection UI
+    const prev = el.querySelector('.date-item.active');
+    if (prev) prev.classList.remove('active');
+    const cur = el.querySelector(`[data-key="${key}"]`);
+    if (cur) cur.classList.add('active');
+    appState.selectedDateKey = key;
+    const entry = appState.dateIndex[key];
+    if (!entry) return;
+    // Apply selected entry to the current view
+    appState.clockData.time = entry.time || appState.clockData.time;
+    appState.clockData.content = entry.content || '';
+    appState.clockData.imageData = entry.image_data || null;
+    appState.clockData.created_at = entry.created_at || appState.clockData.created_at;
+    updateClock();
+}
 
 /**
  * Compute heights and start/stop continuous marquee scrolling
