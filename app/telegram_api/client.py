@@ -4,7 +4,7 @@ import base64
 import io
 import os
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, AsyncIterator, Dict, List, Optional
 
 from loguru import logger
@@ -99,21 +99,35 @@ class TelegramService:
             return []
 
     async def iter_channel_messages(self, min_date: Optional[datetime] = None) -> AsyncIterator[Message]:
-        """Iterate over channel messages optionally filtered by a minimum date.
+        """Iterate channel messages, stopping when older than ``min_date``.
+
+        Telethon's ``iter_messages`` in our pinned version doesn't support
+        ``min_date`` kwarg. We iterate from newest to oldest and stop once a
+        message is older than the provided ``min_date``.
 
         Args:
-            min_date: If provided, only messages on/after this date are yielded.
-
-        Yields:
-            Message objects from the channel in reverse chronological order.
+            min_date: Minimum datetime (UTC). Messages older than this are not yielded.
         """
-        try:
-            client = self._get_client()
-            async for message in client.iter_messages(self.channel_username, min_date=min_date):
+        client = self._get_client()
+
+        # Normalize to aware UTC for safe comparison with Telethon datetimes
+        min_date_utc: Optional[datetime]
+        if min_date is None:
+            min_date_utc = None
+        else:
+            min_date_utc = min_date if min_date.tzinfo else min_date.replace(tzinfo=timezone.utc)
+
+        async for message in client.iter_messages(self.channel_username):
+            try:
+                msg_dt: Optional[datetime] = getattr(message, "date", None)
+                if msg_dt is not None and min_date_utc is not None:
+                    # Telethon message dates are typically tz-aware (UTC)
+                    if msg_dt < min_date_utc:
+                        break
                 yield message
-        except Exception as e:  # pragma: no cover - simple passthrough iterator
-            logger.error(f"Error iterating messages: {e}")
-            return
+            except Exception as e:  # pragma: no cover - skip problematic message
+                logger.warning(f"Skipping message during iteration due to error: {e}")
+                continue
 
     async def get_channel_info(self) -> Optional[Dict[str, Any]]:
         """Get information about the channel."""

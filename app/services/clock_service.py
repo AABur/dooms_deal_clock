@@ -1,6 +1,6 @@
 """Service for managing clock updates and database operations."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from loguru import logger
@@ -89,8 +89,8 @@ class ClockService:
             if days <= 0:
                 min_date = None
             else:
-                # Use UTC naive to match existing fallback usage
-                min_date = datetime.utcnow() - timedelta(days=days)
+                # Use aware UTC for comparing with Telethon message dates
+                min_date = (datetime.utcnow() - timedelta(days=days)).replace(tzinfo=timezone.utc)
 
             updates_count = 0
             async for message in self.telegram_service.iter_channel_messages(min_date=min_date):
