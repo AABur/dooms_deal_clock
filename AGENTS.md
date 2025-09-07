@@ -13,7 +13,7 @@
 - `make tests`: Run pytest with coverage (HTML in `htmlcov/`).
 - `make test tests/unit/services/test_clock_service.py::test_fetch_and_store_updates_success`: Run a specific test.
 - `make format` / `make lint` / `make mypy` / `make check`: Format, lint, type-check; use before PRs.
-- `make docker-dev` / `docker-logs` / `docker-stop`: Docker workflow.
+- Docker workflow: `make docker-up` / `docker-logs` / `docker-restart` / `docker-down` / `docker-reup`.
 
 ## Coding Style & Naming Conventions
 - Python 3.11, 4-space indent, line length 120, double quotes (ruff config). Import ordering via ruff/isort (`app` is first-party).

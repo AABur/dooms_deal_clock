@@ -124,6 +124,19 @@ The backend provides the following REST API endpoints:
 - `GET /api/clock/latest` - Get current clock data
 - `GET /api/clock/history?limit=10` - Get update history
 - `POST /api/clock/fetch` - Manually fetch updates (for testing)
+- `POST /api/clock/fetch-period?days=30` - Fetch updates for last N days (0 = all)
+- `POST /api/clock/reset` - Delete all stored updates
+
+### Admin UI
+
+- Open the admin panel:
+  - Dev (FastAPI): `/static/admin.html` or `/admin`
+  - Docker/Nginx: `/admin.html`
+  - The panel lets you:
+  - Trigger manual fetch: POST `/api/clock/fetch`
+  - Fetch for period (default 30d, 0 = all): POST `/api/clock/fetch-period?days=...`
+  - Reset DB (delete all messages): POST `/api/clock/reset`
+  - View the latest stored data (`GET /api/clock/latest`)
 
 ### Example Response
 
@@ -200,43 +213,40 @@ manualUpdate("23:55:00", "Critical moment approaching")
 
 ## Docker Deployment
 
-### Production Deployment
+### Quick commands
 
 ```bash
-# Create production environment file
-cp .env.example .env
-# Edit .env with your credentials
+# Build images and start the stack (backend + nginx)
+make docker-up
 
-# Start with Docker Compose  
-docker compose up -d
+# Follow logs
+make docker-logs
 
-# Check status
-docker compose ps
+# Restart containers (config-only changes)
+make docker-restart
 
-# View logs
-docker compose logs -f
+# Recreate with rebuild (code changes)
+make docker-reup
+
+# Stop and remove containers
+make docker-down
 ```
 
-### Services
+### Telegram authorization (first run)
 
-- **Backend**: FastAPI server on port 8000
-- **Frontend**: Served via Nginx on port 80
-- **Database**: SQLite file in `data/` directory
-
-### Telegram Authorization in Docker
-
-For first-time authorization of the Telegram client inside Docker (session persisted in `data/`):
-
-```
+```bash
+# Interactive auth inside container (session saved in data/)
 make docker-auth
-# or: docker compose run --rm dooms-deal-clock python scripts/telegram_auth.py
-```
 
-Check status:
-
-```
+# Check auth status
 make tg-status
-# or: docker compose run --rm dooms-deal-clock python scripts/telegram_status.py
+```
+
+### DB maintenance (optional)
+
+```bash
+# Drop SQLite DB file in volume and restart backend
+make docker-db-reset
 ```
 
 More details in `docs/DOCKER_AUTH.md`.

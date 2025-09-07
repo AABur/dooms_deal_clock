@@ -1,4 +1,5 @@
-.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean js-lint js-format js-check docker-dev docker-build docker-logs docker-status docker-stop docker-clean tg-status docker-db-reset docker-fetch
+.PHONY: help init init-dev run tests test check format lint lint-all mypy deps-check clean js-lint js-format js-check \
+        docker-up docker-reup docker-restart docker-logs docker-ps docker-down docker-auth tg-status docker-db-reset
 .DEFAULT_GOAL := help
 
 # Default Python command using uv
@@ -125,9 +126,24 @@ ui-tests: ## Run only UI (Playwright) tests
 	uv run pytest -m ui tests/ui -q
 
 # Docker targets
-docker-dev: ## Start development Docker environment
-	@echo "Starting development Docker environment..."
-	@docker compose up -d
+docker-up: ## Build and start the Docker stack (backend+nginx)
+	@docker compose up -d --build
+
+docker-reup: ## Recreate stack with rebuild (down + up --build)
+	@docker compose down
+	@docker compose up -d --build
+
+docker-restart: ## Restart running containers
+	@docker compose restart
+
+docker-logs: ## Tail logs for all services
+	@docker compose logs -f
+
+docker-ps: ## Show containers status
+	@docker compose ps
+
+docker-down: ## Stop and remove containers
+	@docker compose down
 
 docker-auth: ## Run interactive Telegram auth inside container (creates data/dooms_deal_session.session)
 	@docker compose run --rm dooms-deal-clock python scripts/telegram_auth.py
@@ -135,29 +151,7 @@ docker-auth: ## Run interactive Telegram auth inside container (creates data/doo
 tg-status: ## Show Telegram authorization status (inside container)
 	@docker compose run --rm dooms-deal-clock python scripts/telegram_status.py
 
-docker-build: ## Build Docker image
-	@echo "Building Docker image..."
-	@docker compose build
-
-docker-logs: ## Show Docker container logs
-	@docker compose logs -f
-
-docker-status: ## Show Docker containers status
-	@docker compose ps
-
-docker-db-reset: ## Drop DB file in volume and restart backend (then run `make docker-fetch`)
+docker-db-reset: ## Drop DB file in volume and restart backend
 	@docker compose stop dooms-deal-clock
 	@docker compose run --rm dooms-deal-clock sh -lc 'rm -f data/clock_data.db || true'
 	@docker compose up -d dooms-deal-clock
-
-docker-fetch: ## Trigger manual fetch via API (requires backend up)
-	@curl -sS -X POST http://localhost:8000/api/clock/fetch || true && echo
-
-docker-stop: ## Stop Docker containers
-	@echo "Stopping Docker containers..."
-	@docker compose down
-
-docker-clean: docker-stop ## Stop containers and clean up
-	@echo "Cleaning up Docker resources..."
-	@docker compose down --volumes --remove-orphans
-	@docker system prune -f
